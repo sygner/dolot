@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package game;
+
+option go_package = "./";
+
+
+import "proto/protos/common.proto";
+
+service GameService{
+    rpc GetGameByGameId(GameId) returns (Game);
+    rpc AddGame(AddGameRequest) returns (Game);
+    rpc GetNextGamesByGameType(GameTypeRequest) returns (Games);
+    rpc GetAllNextGames(Empty) returns (Games);
+    rpc DeleteGameByGameId(GameId) returns (Empty);
+    rpc CheckGameExistsByGameId(GameId) returns (Empty);
+    rpc GetGamesByCreatorId(GetGamesByCreatorIdRequest) returns (Games);
+    rpc AddResultByGameId(AddResultByGameIdRequest) returns (DivisionResults);
+    rpc GetAllPreviousGames(Pagination) returns (Games);
+    rpc GetAllGames(Pagination) returns (Games);
+}
+
+
+message AddResultByGameIdRequest{
+    string game_id = 1;
+    string result = 2;
+}
+
+message GetGamesByCreatorIdRequest{
+    int32 creator_id = 1;
+    Pagination pagination = 2;
+}
+
+
+message GameTypeRequest{
+    GameType game_type = 1;
+    int32 limit = 2;
+}
+
+message AddGameRequest{
+    string name = 1;                        // Name of the game
+    GameType game_type = 2;  
+    string start_time = 3; // Start time for the game's drawing window
+    string end_time = 4;   // End time for the game's drawing window
+    int32 creator_id = 5;   // End time for the game's drawing window
+}
+
+
+
+// Message for Game
+message Game {
+    string id = 1;                          // Unique identifier for the game
+    string name = 2;                        // Name of the game
+    GameType game_type = 3;                 // Type of game (using enum)
+    int32 num_main_numbers = 4;             // Number of main numbers to pick
+    optional int32 num_bonus_numbers = 5;            // Number of bonus numbers
+    int32 main_number_range = 6;            // Range of the main numbers
+    optional int32 bonus_number_range = 7;           // Range of bonus numbers
+    string start_time = 8; // Start time for the game's drawing window
+    string end_time = 9;   // End time for the game's drawing window
+    int32 creator_id = 10;                  // ID of the user/admin who created the game
+    optional string result = 11;                     // Storing the result as a string
+    string created_at = 12; // Timestamp when the game was created
+}
+
+message Games{
+    repeated Game games = 1;
+    optional int32 total = 2;
+}

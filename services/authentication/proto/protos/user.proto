@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package authentication;
+
+option go_package = "./";
+
+import "proto/protos/common.proto";
+
+
+service UserService{
+    rpc GetUsers(Pagination) returns (Users); 
+    rpc GetUserByUserId(UserId) returns (User);
+    rpc GetUserByEmail(Email) returns (User);
+    rpc GetUserByAccountUsername(AccountUsername) returns (User);
+    rpc ChangeUserStatus(ChangeUserStatusRequest) returns (Empty);
+    rpc GetLoginHistoryByUserId(GetLoginHistoryRequest) returns (LoginHistory);
+    rpc ResetPassword(ResetPasswordRequest) returns (Empty);
+    rpc ForgotPassword(Email) returns (Empty);
+}
+
+message ResetPasswordRequest{
+    int32 user_id = 1;
+    string current_password = 2;
+    string new_password = 3;
+}
+
+
+message User{
+    int32 user_id = 1;
+    string phone_number = 2;
+    string email = 3;
+    string account_username = 4;
+    string user_role = 5;
+    string user_status = 6;
+    string provider = 7;
+    bool is_sso = 8;
+    int64 created_at = 9;
+}
+
+message Users{
+    repeated User users = 1;
+    optional int32 total = 2; 
+
+}
+
+message ChangeUserStatusRequest{
+    int32 user_id = 1;
+    string status = 2;
+}
+
+message GetLoginHistoryRequest{
+    Pagination pagination = 1;
+    int32 user_id = 2;
+}
+
+message LoginHistory{
+    repeated int64 logged_in_at = 1; 
+    optional int32 total = 2; 
+}
+

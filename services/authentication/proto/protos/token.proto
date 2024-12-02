@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package authentication;
+
+option go_package = "./";
+
+import "proto/protos/common.proto";
+
+
+service TokenService{
+    rpc GetTokenByATAU(GetTokenByATAURequest) returns (Token);
+    rpc GetTokensByUserId(GetTokensByUserIdRequest) returns (Tokens);
+    rpc GetTokens(Pagination) returns (Tokens);
+    rpc VerifyToken(VerifyTokenRequest) returns (Token);
+    rpc RenewToken(RenewTokenRequest) returns (Token);
+}
+
+message GetTokenByATAURequest{
+    string access_token = 1;
+    string agent = 2;
+    int32 user_id = 3;
+
+}
+
+
+message GetTokensByUserIdRequest{
+    Pagination pagination = 1;
+    int32 user_id = 2;
+}
+
+message Tokens{
+    repeated Token tokens = 1;
+    optional int32 total = 2; 
+
+}
+
+message VerifyTokenRequest{
+    string access_token = 1;
+    string agent = 2;
+}
+
+message RenewTokenRequest{
+    string access_token = 1;
+    string refresh_token = 2;
+    string agent = 3;
+    string ip = 4;
+}

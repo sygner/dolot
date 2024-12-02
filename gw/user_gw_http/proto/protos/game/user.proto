@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package game;
+
+option go_package = "./";
+
+
+import "proto/protos/game/common.proto";
+
+
+service UserService{
+    rpc AddUserChoice(AddUserChoiceRequest) returns (UserChoice);
+    rpc GetUserChoicesByUserId(GetUserChoicesByUserIdRequest) returns (UserChoices);
+    rpc GetUserChoicesByUserIdAndTimeRange(GetUserChoicesByUserIdAndTimeRangeRequest) returns (UserChoices);
+    rpc GetUserChoicesByGameIdAndPagination(GetUserChoicesByGameIdRequest) returns (UserChoices);
+    rpc GetAllUserGames(UserId) returns (GameIds);
+}
+
+message GameIds{
+    repeated string ids = 1;
+}
+
+// Message representing the request to add a user's choice
+message AddUserChoiceRequest {
+    int32 user_id = 1; // User's ID
+    string game_id = 2; // Game ID
+    repeated ChosenMainNumbers chosen_main_numbers = 3; // List of main numbers chosen by the user
+    repeated ChosenBonusNumbers chosen_bonus_numbers = 4; // List of bonus numbers chosen by the user
+}
+
+// Message for chosen main numbers
+message ChosenMainNumbers {
+    repeated int32 chosen_main_numbers = 1; // Each set of main numbers (array of 7 integers)
+}
+
+// Message for chosen bonus numbers
+message ChosenBonusNumbers {
+    repeated int32 chosen_bonus_numbers = 1; // Each set of bonus numbers (array of 7 integers)
+}
+
+// Message representing a UserChoice
+message UserChoice {
+    string id = 1; // Unique ID for this choice
+    int32 user_id = 2; // User ID
+    string game_id = 3; // Game ID
+    repeated ChosenMainNumbers chosen_main_numbers = 4; // Main numbers chosen
+    repeated ChosenBonusNumbers chosen_bonus_numbers = 5; // Bonus numbers chosen
+    string created_at = 6;
+}
+
+
+// Message for handling multiple user choices (if needed)
+message UserChoices {
+    repeated UserChoice user_choices = 1; // Collection of user choices
+    optional int32 total = 2;
+}
+
+message GetUserChoicesByUserIdRequest{
+    int32 user_id = 1;
+    Pagination pagination = 2;
+}
+
+message GetUserChoicesByGameIdRequest{
+    string game_id = 1;
+    Pagination pagination = 2;
+   
+}
+message GetUserChoicesByUserIdAndTimeRangeRequest{
+    string start_time = 1;
+    string end_time = 2;
+    int32 user_id = 3;
+}

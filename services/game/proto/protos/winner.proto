@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package game;
+
+option go_package = "./";
+
+
+import "proto/protos/common.proto";
+
+service WinnerService{
+    rpc GetWinnersByGameId(GameId) returns (DivisionResults);
+}

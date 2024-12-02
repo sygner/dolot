@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package profile;
+
+option go_package = "./";
+
+service ProfileService{
+    rpc AddProfile(AddProfileRequest) returns (Profile);
+    rpc GetProfileByUsername(Username) returns (Profile);
+    rpc GetProfileBySid(Sid) returns (Profile);
+    rpc GetProfileByUserId(UserId) returns (Profile);
+    rpc ChangeUserScore(ChangeScoreRequest) returns (Empty);
+    rpc ChangeUserGamesQuantity(ChangeUserGamesRequest) returns (Empty);
+    rpc ChangeUserWonGames(ChangeUserGamesRequest) returns (Empty);
+    rpc ChangeUserLostGames(ChangeUserGamesRequest) returns (Empty);
+    rpc ChangeUserRank(ChangeUserRankRequest) returns (Empty);
+    rpc ChangeUserImpression(ChangeImpressionRequest) returns (Empty);
+    rpc CheckUsernameExists(Username) returns (Empty);
+    rpc UpdateProfile(UpdateProfileRequest) returns (Empty);
+}
+
+message Empty{}
+
+message ChangeScoreRequest{
+    int32 user_id = 1;
+    float score = 2;
+    bool increment = 3;
+}
+
+message ChangeImpressionRequest{
+    int32 user_id = 1;
+    int32 impression = 2;
+    bool increment = 3;
+}
+
+message ChangeUserGamesRequest{
+    int32 user_id = 1;
+    bool increment = 2;
+}
+
+
+message AddProfileRequest{
+    int32 user_id = 1;
+    string username = 2;
+}
+
+message UpdateProfileRequest{
+    int32 user_id = 1;
+    string username = 2;
+}
+
+message ChangeUserRankRequest{
+    int32 user_id = 1;
+    int32 rank_amount = 2;
+    bool increment = 3;
+}
+
+
+
+message Profile {
+    int32 user_id = 1;
+    string sid = 2;
+    string username = 3;
+    float score = 4;
+    int32 impression = 5;
+    int32 rank = 6;
+    int32 games_quantity = 7;
+    int32 won_games = 8;
+    int32 lost_games = 9;
+    string created_at = 10;
+}
+
+
+message Username{
+    string username = 1;
+}
+
+
+message Sid{
+    string sid = 1;
+}
+
+
+message UserId{
+    int32 user_id = 1;
+}
+

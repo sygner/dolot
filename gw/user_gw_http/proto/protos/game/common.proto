@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package game;
+
+option go_package = "./";
+
+
+message Empty{}
+
+
+message GameId{
+    string game_id = 1;
+}
+
+message Pagination {
+    int32 offset = 1;
+    int32 limit = 2;
+    bool get_total = 3;
+}
+
+// Enum for GameType
+enum GameType {
+    LOTTO = 0;
+    OZLOTTO = 1;
+    POWERBALL = 2;
+    AMERICAN_POWERBALL = 3;
+}
+
+
+message UserId{
+    int32 user_id = 1;
+}
+
+message UserChoiceResult{
+    int32 user_id = 1;
+    repeated int32 choses_numbers = 2;
+    repeated int32 chosen_bonus_number = 3;
+    repeated int32 match_count = 4;
+}
+
+message UserChoiceResultDetail{
+    int32 user_id = 1;
+    repeated int32 ChosenMainNumber = 2;
+    int32 chosen_bonus_number = 3;
+    int32 match_count = 4;
+
+}
+
+message DivisionResult{
+    int32 match_count = 1;
+    bool has_bonus = 2;
+    repeated UserChoiceResultDetail user_choice = 3;
+}
+
+message DivisionResults{
+    repeated DivisionResult division_results = 1;
+}

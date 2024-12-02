@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package authentication;
+
+option go_package = "./";
+
+import "proto/protos/common.proto";
+
+service AuthentcationService{
+    rpc Signup(SignupRequest) returns (Token);
+    rpc Signin(SigninRequest) returns (SigninResponse);
+    rpc Verify(VerifyRequest) returns (VerifyResponse);
+    
+}
+message VerifyResponse{
+    Token token = 1;
+    string value = 2;
+}
+
+message SignupRequest{
+    string email = 1;
+    optional string password = 2;
+    string agent = 3;
+    string ip = 4;
+    optional string provider = 5;
+    bool is_sso = 6;
+}
+
+enum VERIFY_METHOD {
+    SIGNUP = 0;
+    SIGNIN = 1;
+    FORGOT_PASSWORD = 2;
+}
+
+message VerifyRequest{
+    string code = 1;
+    string agent = 2;
+    string ip = 3;
+    VERIFY_METHOD verify_method = 4;
+    optional string new_password = 5;
+}
+
+// message VerifyTokenRequest{
+//     string access_token = 1;
+//     string agent = 2;
+//     string ip = 3;
+// }
+
+// message VerifyTokenResponse{
+//     string user_id = 1;
+//     string user_role = 2;
+// }
+
+enum SIGNIN_METHOD {
+    PASSWORD = 0;
+    EMAIL = 1;
+}
+
+message SigninRequest{
+    string value = 1;
+    optional string password = 2;
+    string agent = 3;
+    string ip = 4;
+    bool is_sso = 5;
+    optional string provider = 6;
+    SIGNIN_METHOD signin_method = 7; 
+}
+
+message SigninResponse{
+    optional Token token = 1;
+    optional string msg = 2;
+}

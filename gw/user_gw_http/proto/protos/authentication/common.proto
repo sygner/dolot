@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package authentication;
+
+option go_package = "./";
+
+
+message Empty{
+
+}
+
+message Token{
+    string access_token = 1;
+    string refresh_token = 2;
+    int32 user_id = 3;
+    string user_role = 4;
+    int32 session_id = 5;
+    string token_status = 6;
+    string ip = 7;
+    string agent = 8;
+    int64 created_at = 9;
+    int64 access_token_expire_at = 10;
+    int64 refresh_token_expire_at = 11;
+}
+
+message Pagination {
+    int32 offset = 1;
+    int32 limit = 2;
+    bool get_total = 3;
+}
+
+message UserId{
+    int32 user_id = 1;
+}
+
+message Email{
+    string email = 1;
+}
+
+message AccountUsername{
+    string account_username = 1;
+}

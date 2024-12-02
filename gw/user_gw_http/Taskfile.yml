@@ -1,0 +1,26 @@
+version: "3"
+
+vars:
+    app_name: dolott_usergw
+
+tasks:
+    build:
+        desc: Build the app
+        cmds:
+        - GOFLAGS=-mod=mod GOARCH=amd64 GOOS=windows go build -o ./out/windows/{{.app_name}}/{{.app_name}}.exe cmd/main.go
+        - GOFLAGS=-mod=mod GOARCH=amd64 GOOS=linux go build -o ./out/linux/{{.app_name}}/{{.app_name}} cmd/main.go
+
+    generate: 
+        desc: Compile protobuf files
+        aliases: [gen]
+        vars:
+            VERSION: v1
+        cmds:
+        - protoc --go_out=./proto/api/authentication/ --go-grpc_out=./proto/api/authentication/ ./proto/protos/authentication/*.proto
+        - protoc --go_out=./proto/api/game/ --go-grpc_out=./proto/api/game/ ./proto/protos/game/*.proto
+        - protoc --go_out=./proto/api/profile/ --go-grpc_out=./proto/api/profile/ ./proto/protos/profile/*.proto
+
+    run: 
+        desc: Run the app
+        cmds:
+        - GOFLAGS=-mod=mod go run ./cmd/main.go --listen-address=127.0.0.1:8080 --authentication-server-address=127.0.0.1:8081 --game-server-address=127.0.0.1:8083 --profile-server-address=127.0.0.1:8082
