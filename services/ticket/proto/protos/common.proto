@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package ticket;
+
+option go_package = "./";
+
+message Pagination {
+    int32 offset = 1;
+    int32 limit = 2;
+    bool get_total = 3;
+}
+
+message UserId{
+    int32 user_id = 1;
+}
+
+message Signature{
+    string signature = 1;
+}
+
+message TicketId{
+    int32 id = 1;
+}
+
+message Count{
+    int32 count = 1;
+}

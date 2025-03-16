@@ -1,7 +1,28 @@
 -- Drop the games table if it already exists to avoid conflicts
+DROP TABLE IF EXISTS "winners";
 DROP TABLE IF EXISTS "user_choices";
-
 DROP TABLE IF EXISTS "games";
+DROP TABLE IF EXISTS "game_types";
+
+-- DROP INDEX idx_winners_game_id;
+-- DROP INDEX idx_user_choices_game_id;
+
+CREATE TABLE game_types (
+    "id" SERIAL PRIMARY KEY NOT NULL,
+    "name" VARCHAR(64) NOT NULL,
+    "description" TEXT NOT NULL,
+    "type_name" VARCHAR(64) NOT NULL,
+    "prize_reward" INTEGER NOT NULL,
+    "day_name" VARCHAR(16) NOT NULL,
+    "token_burn" INTEGER NOT NULL,
+    "auto_compute" BOOLEAN NOT NULL
+);
+
+INSERT INTO game_types ("id", "name", "description", "type_name", "day_name", "prize_reward", "token_burn", "auto_compute") VALUES 
+(1, 'Lotto', 'Lotto is a popular lottery game played in various countries worldwide. Participants choose a set of numbers, usually from a specified range, and aim to match these numbers to those drawn during the official lottery draw. The more numbers a player matches, the larger their prize. Lotto games typically offer multiple prize tiers, with jackpots often reaching significant amounts. Variations of Lotto exist in different countries, each with its unique rules and prize structures.', 'lotto', 'Saturday', 5000000, 1000000, true),
+(2, 'OzLotto', 'Oz Lotto is an Australian national lottery game that debuted in 1994. Players choose 7 numbers from a pool of 1 to 47. During each draw, 7 main numbers and 2 supplementary numbers are selected. To win the jackpot, players must match all 7 main numbers. Oz Lotto is known for its substantial jackpots, often reaching millions of Australian dollars, and includes several prize divisions based on different combinations of main and supplementary numbers. Draws occur weekly on Tuesday evenings.', 'ozlotto', 'Sunday', 5000000, 1000000, true),
+(3, 'Powerball (Australia)', 'Australian Powerball is another highly popular lottery game in Australia. Players select 7 numbers from a pool of 1 to 35 and an additional Powerball number from a separate pool of 1 to 20. To win the jackpot, players must match all 7 main numbers and the Powerball number. With nine prize divisions, players have multiple chances to win smaller prizes, and the jackpot frequently grows to massive amounts. Draws are held every Thursday evening.', 'powerball', 'Wednesday', 5000000, 1000000, true),
+(4, 'American Powerball', 'American Powerball is a well-known lottery game in the United States. Players choose 5 main numbers from a pool of 1 to 69 and an additional Powerball number from a pool of 1 to 26. To win the jackpot, a player must match all 5 main numbers plus the Powerball. The game features large jackpots, often exceeding hundreds of millions of dollars, with multiple secondary prize tiers. Draws take place every Wednesday and Saturday.', 'american_powerball', 'Saturday', 5000000, 1000000, true);
 
 -- Create the games table to store details about different lottery games
 CREATE TABLE "games"(
@@ -16,6 +37,8 @@ CREATE TABLE "games"(
     "end_time" TIMESTAMP NOT NULL, -- The end time for the game's drawing window
     "creator_id" INTEGER NOT NULL, -- ID of the user/admin who created the game
     "result" VARCHAR(255), -- Storing the result as a string for simplicity (e.g., "5,12,23,34,45 + 2" for Powerball)
+    "prize" BIGINT  NULL, -- Admin Prize (Entered)
+    "auto_compute_prize" BOOLEAN NOT NULL DEFAULT FALSE, -- auto compute for computing all user choices or showing the admin prize
     "created_at" TIMESTAMP NOT NULL -- Timestamp when the game was created
 );
 
@@ -37,14 +60,16 @@ CREATE INDEX idx_user_choices_game_id ON user_choices(game_id);
 CREATE TABLE winners (
     "id" SERIAL PRIMARY KEY,          -- Unique ID for each record
     "game_id" VARCHAR(64) NOT NULL,          -- The ID of the related game
+    "game_type" integer NOT NULL, -- Type of game (e.g., lotto = 0, powerball = 2)
     "divisions" JSONB NOT NULL,       -- JSON array to store user_id, match_count, and bonus
     "result_number" VARCHAR(255) NOT NULL, -- The result number associated with the win
+    "prize" BIGINT  NULL, -- Admin Prize (Entered)
+    "jackpot" BOOLEAN NOT NULL, -- Whether the prize is a jackpot win
+    "total_paid" SERIAL, -- Total coin paid to users
     "created_at" TIMESTAMP DEFAULT NOW()  -- Timestamp when the record was created
 );
-
 -- Index to optimize lookups based on game_id (optional)
 CREATE INDEX idx_winners_game_id ON winners(game_id);
-
 
 -- INSERT INTO "games" (
 --     "id", 

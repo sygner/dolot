@@ -53,7 +53,12 @@ func (c *middlewareService) VerificationMiddleware(ctx *fiber.Ctx) error {
 	})
 	if cerr != nil {
 		err := types.ExtractGRPCErrDetails(cerr)
-
+		if err.Code == 5 || err.Code == 10 {
+			return ctx.Status(401).JSON(map[string]interface{}{
+				"error":   "invalid token",
+				"success": false,
+			})
+		}
 		return ctx.Status(err.ErrorToHttpStatus()).JSON(map[string]interface{}{
 			"error":   err.Message,
 			"success": false,

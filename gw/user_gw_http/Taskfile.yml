@@ -19,8 +19,10 @@ tasks:
         - protoc --go_out=./proto/api/authentication/ --go-grpc_out=./proto/api/authentication/ ./proto/protos/authentication/*.proto
         - protoc --go_out=./proto/api/game/ --go-grpc_out=./proto/api/game/ ./proto/protos/game/*.proto
         - protoc --go_out=./proto/api/profile/ --go-grpc_out=./proto/api/profile/ ./proto/protos/profile/*.proto
+        - protoc --go_out=./proto/api/wallet/ --go-grpc_out=./proto/api/wallet/ ./proto/protos/wallet/*.proto
+        - protoc --go_out=./proto/api/ticket/ --go-grpc_out=./proto/api/ticket/ ./proto/protos/ticket/*.proto
 
     run: 
         desc: Run the app
         cmds:
-        - GOFLAGS=-mod=mod go run ./cmd/main.go --listen-address=127.0.0.1:8080 --authentication-server-address=127.0.0.1:8081 --game-server-address=127.0.0.1:8083 --profile-server-address=127.0.0.1:8082
+        - GOFLAGS=-mod=mod go run ./cmd/main.go --listen-address=127.0.0.1:8080 --app-domain=12 --authentication-server-address=127.0.0.1:8081 --game-server-address=127.0.0.1:8083 --profile-server-address=127.0.0.1:8082 --wallet-server-address=127.0.0.1:8085 --ticket-server-address=127.0.0.1:8086 --file-storage-path=./assets

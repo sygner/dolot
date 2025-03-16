@@ -6,8 +6,8 @@ import (
 	"dolott_game/internal/services"
 	"dolott_game/internal/types"
 	pb "dolott_game/proto/api"
-	"strconv"
-	"time"
+	"fmt"
+	"strings"
 )
 
 type GameHandler struct {
@@ -49,6 +49,8 @@ func (c *GameHandler) AddGame(ctx context.Context, request *pb.AddGameRequest) (
 		EndTime:     endTime,
 		GameTypeInt: int32(request.GameType),
 		CreatorId:   request.CreatorId,
+		Prize:       request.Prize,
+		AutoCompute: request.AutoCompute,
 	}
 
 	res, rerr := c.gameService.AddGame(&data)
@@ -144,97 +146,116 @@ func (c *GameHandler) AddResultByGameId(ctx context.Context, request *pb.AddResu
 	return toDivisionResultsProto(exres), nil
 }
 
-func toGamesProto(res *models.Games) *pb.Games {
-	games := make([]*pb.Game, 0)
-	for _, game := range res.Games {
-		games = append(games, toGameProto(&game))
-	}
-	return &pb.Games{Games: games, Total: res.Total}
-}
-
-func toGameProto(res *models.Game) *pb.Game {
-	return &pb.Game{
-		NumMainNumbers:   res.NumMainNumbers,
-		NumBonusNumbers:  res.NumBonusNumbers,
-		MainNumberRange:  res.MainNumberRange,
-		BonusNumberRange: res.BonusNumberRange,
-		CreatorId:        res.CreatorId,
-		Id:               res.Id,
-		Name:             res.Name,
-		Result:           res.Result,
-		GameType:         pb.GameType(models.FromString(res.GameType)),
-		StartTime:        strconv.FormatInt(res.StartTime.Unix(), 10),
-		EndTime:          strconv.FormatInt(res.EndTime.Unix(), 10),
-		CreatedAt:        strconv.FormatInt(res.CreatedAt.Unix(), 10),
-	}
-}
-
-func toUserChoiceResultDetailsProto(res []models.UserChoiceResultDetail) []*pb.UserChoiceResultDetail {
-	choices := make([]*pb.UserChoiceResultDetail, 0)
-	for _, division := range res {
-		choices = append(choices, toUserChoiceResultDetailProto(&division))
-	}
-	return choices
-}
-func toUserChoiceResultDetailProto(res *models.UserChoiceResultDetail) *pb.UserChoiceResultDetail {
-	return &pb.UserChoiceResultDetail{
-		UserId:            res.UserId,
-		ChosenMainNumber:  res.ChosenMainNumbers,
-		ChosenBonusNumber: res.ChosenBonusNumber,
-		MatchCount:        res.MatchCount,
-	}
-}
-
-func toDivisionResultsProto(res []models.DivisionResult) *pb.DivisionResults {
-	divisions := make([]*pb.DivisionResult, 0)
-	for _, division := range res {
-		divisions = append(divisions, toDivisionResultProto(&division))
-	}
-	return &pb.DivisionResults{DivisionResults: divisions}
-}
-func toDivisionResultProto(res *models.DivisionResult) *pb.DivisionResult {
-	return &pb.DivisionResult{
-		HasBonus:   res.HasBonus,
-		UserChoice: toUserChoiceResultDetailsProto(res.UserChoices),
-		MatchCount: res.MatchCount,
-	}
-}
-
-func toUserChoisesProto(res models.UserChoices) *pb.UserChoices {
-	users := make([]*pb.UserChoice, 0)
-	for _, user := range res.UserChoices {
-		users = append(users, toUserChoiceProto(&user))
-	}
-	return &pb.UserChoices{UserChoices: users, Total: res.Total}
-}
-
-func toUserChoiceProto(res *models.UserChoice) *pb.UserChoice {
-	outMainNumbers := make([]*pb.ChosenMainNumbers, 0)
-	for _, c := range res.ChosenMainNumbers {
-		outMainNumbers = append(outMainNumbers, &pb.ChosenMainNumbers{
-			ChosenMainNumbers: c,
-		})
-	}
-	outBonusNumbers := make([]*pb.ChosenBonusNumbers, 0)
-	for _, c := range res.ChosenBonusNumbers {
-		outBonusNumbers = append(outBonusNumbers, &pb.ChosenBonusNumbers{
-			ChosenBonusNumbers: c,
-		})
-	}
-	return &pb.UserChoice{
-		Id:                 res.Id,
-		UserId:             res.UserId,
-		GameId:             res.GameId,
-		ChosenMainNumbers:  outMainNumbers,
-		ChosenBonusNumbers: outBonusNumbers,
-		CreatedAt:          res.CreatedAt.Format("2006-01-02 15:04:05"),
-	}
-}
-func parseTime(timeStr string, errMsg string) (time.Time, error) {
-	timeInt64, err := strconv.ParseInt(timeStr, 10, 64)
+func (c *GameHandler) GetAllGameTypes(ctx context.Context, request *pb.Empty) (*pb.GameTypes, error) {
+	exres, err := c.gameService.GetGameTypes()
 	if err != nil {
-		rerr := types.NewInternalError(errMsg)
-		return time.Time{}, rerr.ErrorToGRPCStatus()
+		return nil, err.ErrorToGRPCStatus()
 	}
-	return time.Unix(timeInt64, 0), nil
+	gameTypesDetails := make([]*pb.GameTypeDetails, 0)
+
+	for _, gameType := range exres {
+		gameTypesDetails = append(gameTypesDetails, &pb.GameTypeDetails{
+			Id:          gameType.Id,
+			Name:        gameType.Name,
+			Description: gameType.Description,
+			TypeName:    gameType.TypeName,
+			DayName:     gameType.DayName,
+			PrizeReward: gameType.PrizeReward,
+			TokenBurn:   gameType.TokenBurn,
+		})
+	}
+	return &pb.GameTypes{GameTypes: gameTypesDetails}, nil
+}
+
+func (c *GameHandler) ChangeGameDetailCalculation(ctx context.Context, request *pb.ChangeGameDetailCalculationRequest) (*pb.GameTypes, error) {
+	var gameType int32
+	switch request.GameType {
+	case 0:
+		gameType = 1
+	case 1:
+		gameType = 2
+	case 2:
+		gameType = 3
+	case 3:
+		gameType = 4
+	}
+	fmt.Println(gameType, request.PrizeReward, request.TokenBurn, request.AutoCompute)
+	err := c.gameService.UpdateGameTypeDetail(gameType, request.DayName, request.PrizeReward, request.TokenBurn, request.AutoCompute)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+	exres, err := c.gameService.GetGameTypes()
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+	gameTypesDetails := make([]*pb.GameTypeDetails, 0)
+
+	for _, gameType := range exres {
+		gameTypesDetails = append(gameTypesDetails, &pb.GameTypeDetails{
+			Id:          gameType.Id,
+			Name:        gameType.Name,
+			Description: gameType.Description,
+			TypeName:    gameType.TypeName,
+			DayName:     gameType.DayName,
+			PrizeReward: gameType.PrizeReward,
+			TokenBurn:   gameType.TokenBurn,
+		})
+	}
+	return &pb.GameTypes{GameTypes: gameTypesDetails}, nil
+}
+
+func (c *GameHandler) GetAllUserPreviousGames(ctx context.Context, request *pb.GetAllUserPreviousGamesRequest) (*pb.Games, error) {
+	data := models.Pagination{
+		Offset: request.Pagination.Offset,
+		Limit:  request.Pagination.Limit,
+		Total:  request.Pagination.GetTotal,
+	}
+
+	res, err := c.gameService.GetAllUserPreviousGames(request.UserId, &data)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+
+	return toGamesProto(res), nil
+}
+
+func (c *GameHandler) GetAllUserPreviousGamesByGameType(ctx context.Context, request *pb.GetAllUserPreviousGamesByGameTypeRequest) (*pb.Games, error) {
+	data := models.Pagination{
+		Offset: request.Pagination.Offset,
+		Limit:  request.Pagination.Limit,
+		Total:  request.Pagination.GetTotal,
+	}
+
+	res, err := c.gameService.GetAllUserPreviousGamesByGameType(request.UserId, strings.ToLower(request.GameType), &data)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+
+	return toGamesProto(res), nil
+}
+
+func (c *GameHandler) GetAllUserChoiceDivisionsByGameId(ctx context.Context, request *pb.GetAllUserChoiceDivisionsByGameIdRequest) (*pb.DivisionResults, error) {
+	res, err := c.gameService.GetAllUserChoiceDivisionsByGameId(request.UserId, request.GameId)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+
+	return toDivisionResultsProto(res), nil
+}
+
+func (c *GameHandler) GetAllUsersChoiceDivisionsByGameId(ctx context.Context, request *pb.GameId) (*pb.DivisionResults, error) {
+	res, err := c.gameService.GetAllUsersChoiceDivisionsByGameId(request.GameId)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+
+	return toDivisionResultsProto(res.Divisions), nil
+}
+
+func (c *GameHandler) UpdateGamePrizeByGameId(ctx context.Context, request *pb.UpdateGamePrizeByGameIdRequest) (*pb.Empty, error) {
+	err := c.gameService.UpdateGamePrizeByGameId(request.GameId, request.Prize, request.AutoCompute)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+	return &pb.Empty{}, nil
 }

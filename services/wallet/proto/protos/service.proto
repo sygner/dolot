@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.helloworld";
+option java_outer_classname = "HelloWorldProto";
+option objc_class_prefix = "HLW";
+
+package wallet;
+
+service WalletService {
+  rpc GetAllCoins(Empty) returns (Coins);
+  rpc GetCoinById(CoinId) returns (Coin);
+  rpc GetCoinBySymbol(CoinSymbol) returns (Coin);
+  rpc CreateWallet(CreateWalletRequest) returns (Wallet);
+  rpc GetBalanceByCoinIdAndUserId(GetWalletByCoinIdAndUserIdRequest) returns (Balance);
+  rpc GetWalletsByUserId(UserId) returns (Wallets);
+  rpc GetWalletByAddress(Address) returns (Wallet);
+  rpc GetWalletBySid(Sid) returns (Wallet);
+  rpc GetWalletByWalletId(WalletId) returns (Wallet);
+  rpc UpdateBalance(WalletId) returns (Wallet);
+  rpc DeleteWalletByWalletId(WalletId) returns (Empty);
+  rpc DeleteWalletsByUserId(UserId) returns (Empty);
+  rpc CheckTransactionExists(TransactionId) returns (BooleanResult);
+  rpc GetTransactionByTxId(TransactionId) returns (Transaction);
+  rpc GetTransactionsByWalletId(GetTransactionsByWalletIdRequest) returns (Transactions);
+  rpc AddTransaction(AddTransactionRequest) returns (Transaction);
+  rpc GetTransactionsByUserId(UserId) returns (Transactions);
+  rpc GetWalletsByUserIdsAndCoinId(GetWalletsByUserIdsAndCoinIdRequest) returns (Wallets);
+}
+
+message Empty{
+
+}
+
+message BooleanResult{
+  bool result = 1;
+}
+
+message GetWalletsByUserIdsAndCoinIdRequest{
+  repeated int32 user_ids = 1;
+  int32 coin_id = 2;
+}
+
+message GetTransactionsByWalletIdRequest{
+  int32 user_id = 1;
+  int32 wallet_id = 2;
+}
+
+message Coin{
+  int32 coin_id = 1;
+  string currency_name = 2;
+  string currency_symbol = 3;
+}
+
+message Coins{
+  repeated Coin coins = 1;
+}
+
+message Sid{
+  string sid = 1;
+}
+
+message CreateWalletRequest{
+  int32 user_id = 1;
+  int32 coin_id = 2;
+}
+
+message AddTransactionRequest{
+  double amount = 1;
+  int32 from_wallet_id = 2;
+  int32 from_wallet_user_id = 3;
+  string to_wallet_address = 4;
+  int32 coin_id = 5;
+}
+
+message GetWalletByCoinIdAndUserIdRequest{
+  int32 user_id = 1;
+  int32 coin_id = 2;
+}
+
+
+message CoinId{
+  int32 coin_id = 1;
+}
+
+message CoinSymbol{
+  string symbol = 2;
+}
+
+message UserId{
+  int32 user_id = 1;
+}
+
+message TransactionId{
+  string tx_id = 1;
+}
+
+message Address{
+  string address = 1;
+}
+
+message WalletId{
+  int32 id = 1;
+}
+
+message Balance{
+  float balance = 1;
+}
+
+message UpdateBalanceRequest{
+  string wallet_id = 1;
+  float balance = 2;
+}
+
+message Wallet{
+  int32 id = 1;
+  string sid = 2;
+  int32 user_id = 3;
+  int32 coin_id = 4;
+  float balance = 5;
+  string address = 6;
+  string public_key = 7;
+  string private_key = 8;
+  string mnemonic = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message Wallets{
+  repeated Wallet wallets = 1;
+}
+
+message Transaction{
+  string tx_id = 1;
+  int32 currency_id = 2;
+  string currency_name = 3;
+  string from_address = 4;
+  string to_address = 5;
+  int32 from_wallet_id = 6;
+  string from_public_key = 7;
+  double amount = 8;
+  string transaction_at = 9;
+}
+
+message Transactions{
+  repeated Transaction transactions = 1;
+}

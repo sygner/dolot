@@ -33,6 +33,15 @@ type DivisionResult struct {
 	MatchCount  int32                    `json:"match_count"`  // The number of matching numbers
 	HasBonus    bool                     `json:"has_bonus"`    // Whether the division requires a matching bonus number
 	UserChoices []UserChoiceResultDetail `json:"user_choices"` // A list of user choices that belong to this division
+	Division    string                   `json:"division"`
+}
+
+type DivisionResultCount struct {
+	MatchCount    int32   `json:"match_count"` // The number of matching numbers
+	HasBonus      bool    `json:"has_bonus"`   // Whether the division requires a matching bonus number
+	Count         uint32  `json:"count"`       // len of division
+	Division      string  `json:"division"`
+	DivisionPrize float64 `json:"division_prize"`
 }
 
 type BonusDivision struct {

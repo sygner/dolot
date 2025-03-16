@@ -18,6 +18,11 @@ message Pagination {
     bool get_total = 3;
 }
 
+message GameTypeRequest{
+    GameType game_type = 1;
+    int32 limit = 2;
+}
+
 // Enum for GameType
 enum GameType {
     LOTTO = 0;
@@ -47,11 +52,23 @@ message UserChoiceResultDetail{
 }
 
 message DivisionResult{
-    int32 match_count = 1;
-    bool has_bonus = 2;
-    repeated UserChoiceResultDetail user_choice = 3;
+    string division = 1; 
+    int32 match_count = 2;
+    bool has_bonus = 3;
+    repeated UserChoiceResultDetail user_choice = 4;
 }
 
 message DivisionResults{
     repeated DivisionResult division_results = 1;
+}
+
+message DivisionResultCount{
+    string division = 1; 
+    int32 match_count = 2;
+    bool has_bonus = 3;
+    int32 count = 4;
+}
+
+message DivisionResultsCount{
+    repeated DivisionResultCount division_results_count = 1;
 }

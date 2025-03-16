@@ -9,9 +9,12 @@ import (
 	authentication_pb "dolott_user_gw_http/proto/api/authentication"
 	game_pb "dolott_user_gw_http/proto/api/game"
 	profile_pb "dolott_user_gw_http/proto/api/profile"
+	ticket_pb "dolott_user_gw_http/proto/api/ticket"
+	wallet_pb "dolott_user_gw_http/proto/api/wallet"
 	"fmt"
 	"safir/libs/appconfigs"
 	"safir/libs/appstates"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -23,14 +26,21 @@ func RunServer() {
 	// Define variables for server configuration obtained from environment variables.
 	var (
 		listenAddress               = appconfigs.String("listen-address", "Server listen address")
+		appDomain                   = appconfigs.String("app-domain", "App domain that use for api like a domain dolott.com enter valid ip if you don't have any domain or leave it empty")
 		authenticationServerAddress = appconfigs.String("authentication-server-address", "Room server address")
 		gameAddress                 = appconfigs.String("game-server-address", "Game server address")
 		profileAddress              = appconfigs.String("profile-server-address", "Profile server address")
+		walletAddress               = appconfigs.String("wallet-server-address", "Wallet server address")
+		ticketAddress               = appconfigs.String("ticket-server-address", "Wallet server address")
+		fileStoragePath             = appconfigs.String("file-storage-path", "File storage server address")
 	)
 
 	// Handle configuration errors and missing environment parameters.
 	if err := appconfigs.Parse(); err != nil {
 		appstates.PanicMissingEnvParams(err.Error())
+	}
+	if strings.Trim(*appDomain, "") == "" || len(*appDomain) <= 4 {
+		appDomain = listenAddress
 	}
 
 	// Establish connections to external services via gRPC.
@@ -38,6 +48,8 @@ func RunServer() {
 		authenticationServerConnection = client.GrpcClientServerConnection(*authenticationServerAddress)
 		gameServerConnection           = client.GrpcClientServerConnection(*gameAddress)
 		profileServerConnection        = client.GrpcClientServerConnection(*profileAddress)
+		walletServiceConnection        = client.GrpcClientServerConnection(*walletAddress)
+		ticketServiceConnection        = client.GrpcClientServerConnection(*ticketAddress)
 
 		authenticationClient = authentication_pb.NewAuthentcationServiceClient(authenticationServerConnection)
 		tokenClient          = authentication_pb.NewTokenServiceClient(authenticationServerConnection)
@@ -48,7 +60,13 @@ func RunServer() {
 		userGameClient = game_pb.NewUserServiceClient(gameServerConnection)
 
 		profileClient = profile_pb.NewProfileServiceClient(profileServerConnection)
+
+		walletClient = wallet_pb.NewWalletServiceClient(walletServiceConnection)
+
+		ticketClient = ticket_pb.NewTicketServiceClient(ticketServiceConnection)
 	)
+	fmt.Println(*walletAddress)
+	fmt.Println(walletClient)
 
 	// Initialize different services used in the application.
 	var (
@@ -58,20 +76,28 @@ func RunServer() {
 		userService           services.UserService           = services.NewUserService(userClient)
 
 		winnerService   services.WinnerService   = services.NewWinnerService(winnerClient)
-		gameService     services.GameService     = services.NewGameService(gameClient)
-		userGameService services.UserGameService = services.NewUserGameService(userGameClient)
+		gameService     services.GameService     = services.NewGameService(gameClient, ticketClient, walletClient, winnerClient, *appDomain)
+		userGameService services.UserGameService = services.NewUserGameService(userGameClient, ticketClient)
+		walletService   services.WalletService   = services.NewWalletService(walletClient)
+		ticketService   services.TicketService   = services.NewTicketService(ticketClient, walletClient)
+
+		jobQueue services.JobQueue = services.NewJobQueue(gameService, walletService)
 
 		profileService services.ProfileService = services.NewProfileService(profileClient)
 
-		authenticationController controllers.AuthenticationController = controllers.NewAuthenticationController(authenticationService, profileService)
+		authenticationController controllers.AuthenticationController = controllers.NewAuthenticationController(authenticationService, profileService, walletService)
 		userController           controllers.UserController           = controllers.NewUserController(userService)
-		profileController        controllers.ProfileController        = controllers.NewProfileController(profileService)
+		profileController        controllers.ProfileController        = controllers.NewProfileController(profileService, walletService)
 
 		winnerController   controllers.WinnerHandler   = controllers.NewWinnerHandler(winnerService)
-		gameController     controllers.GameHandler     = controllers.NewGameHandler(gameService)
+		gameController     controllers.GameHandler     = controllers.NewGameHandler(gameService, *fileStoragePath)
 		userGameController controllers.UserGameHandler = controllers.NewUserGameHandler(userGameService)
-	)
 
+		walletController controllers.WalletController = controllers.NewWalletController(walletService)
+
+		ticketController controllers.TicketController = controllers.NewTicketController(ticketService)
+	)
+	services.JOB_QUEUE = jobQueue
 	// Create a new Fiber instance.
 	app := fiber.New()
 
@@ -91,9 +117,9 @@ func RunServer() {
 	routes.GameGroup(v1, gameController, middleware)
 	routes.UserGroup(v1, userController, middleware)
 	routes.UserGameGroup(v1, userGameController, middleware)
-
 	routes.ProfileGroup(v1, profileController, middleware)
-
+	routes.WalletGroup(v1, walletController, middleware)
+	routes.TicketGroup(v1, ticketController, middleware)
 	// Default route for a simple hello world response.
 	app.Get("/", func(c *fiber.Ctx) error {
 		fmt.Println(c.Context())

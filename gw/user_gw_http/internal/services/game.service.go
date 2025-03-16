@@ -2,9 +2,16 @@ package services
 
 import (
 	"context"
+	"dolott_user_gw_http/internal/constants"
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/types"
 	pb "dolott_user_gw_http/proto/api/game"
+	ticket_pb "dolott_user_gw_http/proto/api/ticket"
+	wallet_pb "dolott_user_gw_http/proto/api/wallet"
+	"log"
+
+	"fmt"
+	"math"
 )
 
 type (
@@ -19,15 +26,31 @@ type (
 		GetAllNextGames() (*models.Games, *types.Error)
 		GetAllPreviousGames(*models.Pagination) (*models.Games, *types.Error)
 		GetAllGames(*models.Pagination) (*models.Games, *types.Error)
+		GetAllGameTypes() ([]models.GameTypeDetail, *types.Error)
+		UpdateGameTypeDetail(int32, *string, int32, int32, bool) ([]models.GameTypeDetail, *types.Error)
+		GetAllUserPreviousGames(int32, *models.Pagination) (*models.Games, *types.Error)
+		GetAllUserPreviousGamesByGameType(int32, string, *models.Pagination) (*models.Games, *types.Error)
+		GetAllUserChoiceDivisionsByGameId(int32, string) ([]models.DivisionResult, *types.Error)
+		GetAllUsersChoiceDivisionsByGameId(string) ([]models.DivisionResult, *types.Error)
+		UpdateGamePrizeByGameId(string, *uint32, bool) *types.Error
+		TransactionForWinner([]models.DivisionResult, string)
 	}
 	gameService struct {
-		gameClient pb.GameServiceClient
+		gameClient    pb.GameServiceClient
+		winnerClient  pb.WinnerServiceClient
+		ticketClient  ticket_pb.TicketServiceClient
+		walletClient  wallet_pb.WalletServiceClient
+		serverAddress string
 	}
 )
 
-func NewGameService(gameClient pb.GameServiceClient) GameService {
+func NewGameService(gameClient pb.GameServiceClient, ticketClient ticket_pb.TicketServiceClient, walletClient wallet_pb.WalletServiceClient, winnerClient pb.WinnerServiceClient, serverAddress string) GameService {
 	return &gameService{
-		gameClient: gameClient,
+		gameClient:    gameClient,
+		winnerClient:  winnerClient,
+		ticketClient:  ticketClient,
+		walletClient:  walletClient,
+		serverAddress: serverAddress,
 	}
 }
 
@@ -41,11 +64,13 @@ func (c *gameService) GetGameByGameId(gameId string) (*models.Game, *types.Error
 
 func (c *gameService) AddGame(data *models.AddGameDTO) (*models.Game, *types.Error) {
 	res, err := c.gameClient.AddGame(context.Background(), &pb.AddGameRequest{
-		Name:      data.Name,
-		GameType:  pb.GameType(data.GameTypeInt),
-		StartTime: data.StartTime,
-		EndTime:   data.EndTime,
-		CreatorId: data.CreatorId,
+		Name:        data.Name,
+		GameType:    pb.GameType(data.GameTypeInt),
+		StartTime:   data.StartTime,
+		EndTime:     data.EndTime,
+		Prize:       data.Prize,
+		AutoCompute: data.AutoCompute,
+		CreatorId:   data.CreatorId,
 	})
 	if err != nil {
 		return nil, types.ExtractGRPCErrDetails(err)
@@ -93,6 +118,29 @@ func (c *gameService) GetAllGames(pagination *models.Pagination) (*models.Games,
 	return toGamesProto(res)
 }
 
+func (c *gameService) GetAllGameTypes() ([]models.GameTypeDetail, *types.Error) {
+	res, err := c.gameClient.GetAllGameTypes(context.Background(), &pb.Empty{})
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+
+	gameTypeDetails := make([]models.GameTypeDetail, 0)
+
+	for _, gameType := range res.GameTypes {
+		gameTypeDetails = append(gameTypeDetails, models.GameTypeDetail{
+			Id:          gameType.Id,
+			Name:        gameType.Name,
+			Description: gameType.Description,
+			TypeName:    gameType.TypeName,
+			DayName:     gameType.DayName,
+			PicturePath: c.serverAddress + "/api/game/dl?path=" + "svg/static/" + gameType.TypeName + ".svg",
+			PrizeReward: gameType.PrizeReward,
+			TokenBurn:   gameType.TokenBurn,
+		})
+	}
+	return gameTypeDetails, nil
+}
+
 func (c *gameService) DeleteGameByGameId(gameId string) *types.Error {
 	_, err := c.gameClient.DeleteGameByGameId(context.Background(), &pb.GameId{GameId: gameId})
 	if err != nil {
@@ -132,5 +180,296 @@ func (c *gameService) AddResultByGameId(gameId string, result string) ([]models.
 		return nil, types.ExtractGRPCErrDetails(err)
 	}
 
+	// Enqueue safely in a goroutine, but handle errors
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovered from panic in job enqueue: %v", r)
+			}
+		}()
+
+		JOB_QUEUE.Enqueue(Job{
+			Priority: Normal,
+			Type:     LotteryJob,
+			GameID:   gameId,
+			Results:  toDivisionResultsProto(res.DivisionResults),
+		})
+	}()
+
 	return toDivisionResultsProto(res.DivisionResults), nil
 }
+
+func (c *gameService) UpdateGameTypeDetail(gameType int32, dayName *string, prizeReward int32, tokenBurn int32, autoCompute bool) ([]models.GameTypeDetail, *types.Error) {
+	res, err := c.gameClient.ChangeGameDetailCalculation(context.Background(), &pb.ChangeGameDetailCalculationRequest{
+		GameType:    pb.GameType(gameType),
+		DayName:     dayName,
+		PrizeReward: prizeReward,
+		TokenBurn:   tokenBurn,
+		AutoCompute: autoCompute,
+	})
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+	gameTypeDetails := make([]models.GameTypeDetail, 0)
+
+	for _, gameType := range res.GameTypes {
+		gameTypeDetails = append(gameTypeDetails, models.GameTypeDetail{
+			Id:          gameType.Id,
+			Name:        gameType.Name,
+			Description: gameType.Description,
+			TypeName:    gameType.TypeName,
+			DayName:     gameType.DayName,
+			PicturePath: c.serverAddress + "/api/game/dl?path=" + "svg/static/" + gameType.TypeName + ".svg",
+			PrizeReward: gameType.PrizeReward,
+			TokenBurn:   gameType.TokenBurn,
+		})
+	}
+	return gameTypeDetails, nil
+}
+
+func (c *gameService) GetAllUserPreviousGames(userId int32, data *models.Pagination) (*models.Games, *types.Error) {
+	res, err := c.gameClient.GetAllUserPreviousGames(context.Background(), &pb.GetAllUserPreviousGamesRequest{
+		UserId: userId,
+		Pagination: &pb.Pagination{
+			Offset:   data.Offset,
+			Limit:    data.Limit,
+			GetTotal: data.Total,
+		},
+	})
+
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+
+	return toGamesProto(res)
+}
+
+func (c *gameService) GetAllUserPreviousGamesByGameType(userId int32, gameType string, data *models.Pagination) (*models.Games, *types.Error) {
+	res, err := c.gameClient.GetAllUserPreviousGamesByGameType(context.Background(), &pb.GetAllUserPreviousGamesByGameTypeRequest{
+		UserId:   userId,
+		GameType: gameType,
+		Pagination: &pb.Pagination{
+			Offset:   data.Offset,
+			Limit:    data.Limit,
+			GetTotal: data.Total,
+		},
+	})
+
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+
+	return toGamesProto(res)
+}
+
+func (c *gameService) GetAllUserChoiceDivisionsByGameId(userId int32, gameId string) ([]models.DivisionResult, *types.Error) {
+	res, err := c.gameClient.GetAllUserChoiceDivisionsByGameId(context.Background(), &pb.GetAllUserChoiceDivisionsByGameIdRequest{
+		UserId: userId,
+		GameId: gameId,
+	})
+
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+
+	return toDivisionResultsProto(res.DivisionResults), nil
+}
+
+func (c *gameService) GetAllUsersChoiceDivisionsByGameId(gameId string) ([]models.DivisionResult, *types.Error) {
+	res, err := c.gameClient.GetAllUsersChoiceDivisionsByGameId(context.Background(), &pb.GameId{
+		GameId: gameId,
+	})
+
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+
+	return toDivisionResultsProto(res.DivisionResults), nil
+}
+
+func (c *gameService) UpdateGamePrizeByGameId(gameId string, prize *uint32, autoCompute bool) *types.Error {
+	_, err := c.gameClient.UpdateGamePrizeByGameId(context.Background(), &pb.UpdateGamePrizeByGameIdRequest{
+		GameId:      gameId,
+		Prize:       prize,
+		AutoCompute: autoCompute,
+	})
+
+	if err != nil {
+		return types.ExtractGRPCErrDetails(err)
+	}
+
+	return nil
+}
+
+func (c *gameService) TransactionForWinner(data []models.DivisionResult, gameId string) {
+	// wlt, err := c.walletClient.GetWalletsByUserId(context.Background(), &wallet_pb.UserId{
+	// 	UserId: 0,
+	// })
+	// if err != nil || len(wlt.Wallets) == 0 {
+	// 	fmt.Println("Wallet Not Found")
+	// 	return
+	// }
+
+	// Fetch game details
+	gameRes, err := c.gameClient.GetGameByGameId(context.Background(), &pb.GameId{GameId: gameId})
+	if err != nil || gameRes.Prize == nil {
+		fmt.Println("Error fetching game data or prize is nil")
+		return
+	}
+
+	gameData, rerr := toGameProto(gameRes)
+	if rerr != nil {
+		return
+	}
+
+	jackpot := float64(*gameData.Prize)
+
+	// Determine division payout structure
+	var divisionMap map[string]float64
+	gameType := 0
+	switch gameData.GameType {
+	case "LOTTO":
+		divisionMap = LottoWinnerDivisions
+		gameType = 0
+	case "OZLOTTO":
+		divisionMap = OsLottoWinnerDivisions
+		gameType = 1
+	case "POWERBALL":
+		divisionMap = PowerballWinnerDivisions
+		gameType = 2
+	case "AMERICAN_POWERBALL":
+		divisionMap = AmericanPowerballWinnerDivisions
+		gameType = 3
+
+	}
+
+	lastWinnerGameRes, err := c.winnerClient.GetLastWinnersByGameType(context.Background(), &pb.GameTypeRequest{
+		GameType: pb.GameType(gameType),
+		Limit:    0,
+	})
+	if err != nil {
+		return
+	}
+	if !lastWinnerGameRes.Jackpot {
+		if gameType != 3 {
+			jackpot += float64(lastWinnerGameRes.Prize)
+		}
+	}
+
+	// Map to store total prizes per user
+	userPrizeMap := make(map[int32]float64)
+	userIds := make([]int32, 0)
+
+	// Process each division result
+	for _, dr := range data {
+		divisionPercentage, exists := divisionMap[dr.Division]
+		if !exists || len(dr.UserChoices) == 0 {
+			continue
+		}
+
+		// Use a temporary jackpot value that can be modified only for Division 1
+		currentJackpot := jackpot
+
+		// Only add the last winner's prize if it's Division 1 and the last game had no jackpot
+		if dr.Division == "Division 1" {
+			if !lastWinnerGameRes.Jackpot {
+				if gameType != 3 {
+					currentJackpot += float64(lastWinnerGameRes.Prize)
+				}
+			}
+		}
+
+		// Calculate total division prize using the modified or original jackpot
+		divisionTotalPrize := currentJackpot * divisionPercentage
+		winnerCount := float64(len(dr.UserChoices)) // Total winners in this division
+
+		// Ensure divisionTotalPrize is split among all winners
+		if winnerCount > 0 {
+			prizePerWinner := divisionTotalPrize / winnerCount
+			for _, uc := range dr.UserChoices {
+				if _, exists := userPrizeMap[uc.UserId]; !exists {
+					userIds = append(userIds, uc.UserId)
+				}
+				fmt.Println("Share of Winning UserId:", uc.UserId, "Prize:", userPrizeMap[uc.UserId], prizePerWinner, "Division:", dr.Division, "Map of Division:", divisionMap[dr.Division], "JackPot:", currentJackpot, "Percentage:", divisionTotalPrize)
+				userPrizeMap[uc.UserId] += prizePerWinner // Add user's share of winnings
+			}
+		}
+	}
+
+	fmt.Println("Final User Prize Map:", userPrizeMap, "Full Game Prize:", *gameData.Prize)
+
+	// Fetch wallets for users
+	res, err := c.walletClient.GetWalletsByUserIdsAndCoinId(context.Background(), &wallet_pb.GetWalletsByUserIdsAndCoinIdRequest{
+		UserIds: userIds,
+		CoinId:  1,
+	})
+	if err != nil {
+		fmt.Println("Error fetching wallets:", err)
+		return
+	}
+
+	walletMap := make(map[int32]*wallet_pb.Wallet)
+	for _, wallet := range res.Wallets {
+		walletMap[wallet.UserId] = wallet
+	}
+	paidPrize := float64(0)
+	// Process payments
+	for userId, totalPrize := range userPrizeMap {
+		wallet, found := walletMap[userId]
+		if !found {
+			fmt.Printf("No wallet found for user %d\n", userId)
+			continue
+		}
+
+		fmt.Printf("Paying User %d Prize: %.2f\n", userId, totalPrize)
+		trx, err := c.walletClient.AddTransaction(context.Background(), &wallet_pb.AddTransactionRequest{
+			FromWalletUserId: constants.MAIN_LUNC_USER_WALLET_ID,
+			FromWalletId:     constants.MAIN_LUNC_WALLET_ID,
+			ToWalletAddress:  wallet.Address,
+			Amount:           math.Round(totalPrize), // Round amount for precision
+			CoinId:           1,
+		})
+		if err != nil {
+			fmt.Printf("Transaction failed for user %d: %v\n", userId, err)
+		} else {
+			paidPrize += float64(totalPrize)
+			fmt.Println("Transaction Successful:", trx)
+		}
+	}
+	c.winnerClient.UpdateTotalPaid(context.Background(), &pb.UpdateTotalPaidRequest{
+		GameId:    gameId,
+		TotalPaid: fmt.Sprintf("%.2f", paidPrize),
+	})
+	fmt.Println("All transactions processed successfully.")
+}
+
+// // Process each division result
+// for _, dr := range data {
+// 	divisionPercentage, exists := divisionMap[dr.Division]
+// 	if !exists || len(dr.UserChoices) == 0 {
+// 		continue
+// 	}
+// 	if dr.Division == "Division 1" {
+// 		if !lastWinnerGameRes.Jackpot {
+// 			if gameType != 3 {
+// 				jackpot += float64(lastWinnerGameRes.Prize)
+// 			}
+// 		}
+// 	}
+
+// 	// Calculate total division prize
+// 	divisionTotalPrize := jackpot * divisionPercentage
+// 	winnerCount := float64(len(dr.UserChoices)) // Total winners in this division
+
+// 	// Ensure divisionTotalPrize is split among all winners
+// 	if winnerCount > 0 {
+// 		prizePerWinner := divisionTotalPrize / winnerCount
+// 		for _, uc := range dr.UserChoices {
+// 			if _, exists := userPrizeMap[uc.UserId]; !exists {
+// 				userIds = append(userIds, uc.UserId)
+// 			}
+// 			fmt.Println("Share of Winning UserId:", uc.UserId, "Prize:", userPrizeMap[uc.UserId], prizePerWinner, "Division:", dr.Division, "Map of Division:", divisionMap[dr.Division], "JackPot:", jackpot, "Percentage:", divisionTotalPrize)
+// 			userPrizeMap[uc.UserId] += prizePerWinner // Add user's share of winnings
+// 		}
+// 	}
+// }

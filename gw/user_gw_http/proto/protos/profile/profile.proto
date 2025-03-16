@@ -4,6 +4,7 @@ package profile;
 
 option go_package = "./";
 
+
 service ProfileService{
     rpc AddProfile(AddProfileRequest) returns (Profile);
     rpc GetProfileByUsername(Username) returns (Profile);
@@ -55,8 +56,6 @@ message ChangeUserRankRequest{
     bool increment = 3;
 }
 
-
-
 message Profile {
     int32 user_id = 1;
     string sid = 2;
@@ -68,6 +67,7 @@ message Profile {
     int32 won_games = 8;
     int32 lost_games = 9;
     string created_at = 10;
+    int32 highest_rank = 11;
 }
 
 
@@ -84,3 +84,4 @@ message Sid{
 message UserId{
     int32 user_id = 1;
 }
+

@@ -53,3 +53,15 @@ func (c *profileRepository) AdjustUserRank(userId int32, rankAmount int32, incre
 	}
 	return nil
 }
+
+func (c *profileRepository) GetHighestRank() (int32, *types.Error) {
+	var result int32
+	query := "SELECT COALESCE(MAX(rank), 0) FROM profiles;"
+
+	err := c.db.QueryRow(query).Scan(&result)
+	if err != nil {
+		return result, types.NewInternalError("failed to get the highest rank #3006")
+	}
+
+	return result, nil
+}

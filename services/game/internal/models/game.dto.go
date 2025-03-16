@@ -14,5 +14,7 @@ type AddGameDTO struct {
 	StartTime        time.Time `db:"start_time" json:"start_time"`
 	EndTime          time.Time `db:"end_time" json:"end_time"`
 	CreatorId        int32     `db:"creator_id" json:"creator_id"`
+	Prize            *uint32   `db:"prize" json:"prize"`
+	AutoCompute      bool      `db:"auto_compute" json:"auto_compute"`
 	Result           *string   `db:"result" json:"result"`
 }

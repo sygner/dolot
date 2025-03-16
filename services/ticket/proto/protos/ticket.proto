@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package ticket;
+
+option go_package = "./";
+
+import "proto/protos/common.proto";
+
+service TicketService {
+    rpc AddTicket(AddTicketRequest) returns (Ticket);
+    rpc GetTicketBySignatureAndUserId(SignatureAndUserId) returns (Ticket);
+    rpc GetTicketByUserIdAndTicketId(TicketIdAndUserId) returns (Ticket);
+    rpc GetAllUserTickets(UserIdAndPagination) returns (Tickets);
+    rpc GetUserOpenTickets(UserIdAndPagination) returns (Tickets);
+    rpc GetAllUsedTickets(UserIdAndPagination) returns (Tickets);
+    rpc UseTickets(UseTicketsRequest) returns (Tickets);
+    rpc AddTickets(AddTicketsRequest) returns (Tickets);
+    rpc GetAllUserTicketsByGameId(GetAllUserTicketsByGameIdRequest) returns (Tickets);
+    rpc GetAllTicketsByGameId(GameId) returns (Tickets);
+    rpc GetAllPurchasedTicketsCountByGameId(GameId) returns (Count);
+}
+
+message GameId{
+    string game_id = 1;
+}
+
+message GetAllUserTicketsByGameIdRequest{
+    string game_id = 1;
+    int32 user_id = 2;
+
+}
+
+message UseTicketsRequest{
+    int32 user_id = 1;
+    int32 total_using_tickets = 2;
+    string game_id = 3;
+}
+
+message UserIdAndPagination{
+    int32 user_id = 1;
+    Pagination pagination = 2; 
+}
+
+message Tickets{
+    repeated Ticket tickets = 1;
+    optional int32 total = 2;
+}
+
+message SignatureAndUserId{
+    string signature = 1;
+    int32 user_id = 2;
+}
+
+message TicketIdAndUserId{
+    int32 ticket_id = 1;
+    int32 user_id = 2;
+}
+
+message Ticket{
+    int32 id = 1;
+    int32 user_id = 3;
+    string signature = 2;
+    string ticket_type = 4;
+    string status = 5;
+    bool used = 6;
+    optional string game_id = 7;
+    optional string used_at = 8;
+    string created_at = 9;
+}
+
+message AddTicketRequest{
+    int32 user_id = 1;
+    string ticket_type = 2;
+    string game_id = 3;
+}
+
+message AddTicketsRequest{
+    bool should_return =1;
+    repeated AddTicketRequest tickets = 2;
+}

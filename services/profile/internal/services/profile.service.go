@@ -82,18 +82,24 @@ func (c *profileService) AddProfile(data *models.AddProfileDTO) (*models.Profile
 	if rerr != nil {
 		return nil, types.NewBadRequestError("failed to make the sid #3102")
 	}
+
+	highestRank, err := c.repository.GetHighestRank()
+	if err != nil {
+		return nil, err
+	}
+
 	data.Sid = sid
 	data.Impression = 0
-	data.Rank = 0
+	data.Rank = highestRank + 1
 	data.Score = 0
 	data.GamesQuantity = 0
 	data.LostGames = 0
 	data.WonGames = 0
 
-	err = c.repository.ChangeAllRanks(true)
-	if err != nil {
-		return nil, err
-	}
+	// err = c.repository.ChangeAllRanks(true)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	err = c.repository.AddProfile(data)
 	if err != nil {
 		err = c.repository.ChangeAllRanks(false)

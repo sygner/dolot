@@ -4,6 +4,17 @@ import (
 	"time"
 )
 
+type GameTypeDetail struct {
+	Id          int32  `db:"id" json:"id"`
+	Name        string `db:"name" json:"name"`
+	Description string `db:"description" json:"description"`
+	TypeName    string `db:"type_name" json:"type_name"`
+	DayName     string `json:"day_name"`
+	PicturePath string `json:"picture_path"`
+	PrizeReward int32  `json:"prize_reward"`
+	TokenBurn   int32  `json:"token_burn"`
+}
+
 type Game struct {
 	Id               string    `db:"id" json:"id"`
 	Name             string    `db:"name" json:"name"`
@@ -16,6 +27,8 @@ type Game struct {
 	EndTime          time.Time `db:"end_time" json:"end_time"`
 	CreatorId        int32     `db:"creator_id" json:"creator_id"`
 	Result           *string   `db:"result" json:"result"`
+	Prize            *uint32   `db:"prize" json:"prize"`
+	AutoCompute      bool      `db:"auto_compute" json:"auto_compute"`
 	CreatedAt        time.Time `db:"created_at" json:"created_at"`
 }
 

@@ -12,7 +12,7 @@ type (
 		GetProfileBySid(string) (*models.Profile, *types.Error)
 		GetProfileByUserId(int32) (*models.Profile, *types.Error)
 		AddProfile(*models.AddProfileDTO) *types.Error
-
+		GetHighestRank() (int32, *types.Error)
 		ChangeAllRanks(bool) *types.Error
 
 		// IncrementAllRanks() *types.Error

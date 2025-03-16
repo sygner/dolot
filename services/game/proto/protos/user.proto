@@ -26,6 +26,7 @@ message AddUserChoiceRequest {
     string game_id = 2; // Game ID
     repeated ChosenMainNumbers chosen_main_numbers = 3; // List of main numbers chosen by the user
     repeated ChosenBonusNumbers chosen_bonus_numbers = 4; // List of bonus numbers chosen by the user
+    bool should_return = 5; // Should return the created choice
 }
 
 // Message for chosen main numbers

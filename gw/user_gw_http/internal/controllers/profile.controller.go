@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"dolott_user_gw_http/internal/constants"
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/services"
 
@@ -16,12 +17,14 @@ type (
 	}
 	profileController struct {
 		profileService services.ProfileService
+		walletService  services.WalletService
 	}
 )
 
-func NewProfileController(profileService services.ProfileService) ProfileController {
+func NewProfileController(profileService services.ProfileService, walletService services.WalletService) ProfileController {
 	return &profileController{
 		profileService: profileService,
+		walletService:  walletService,
 	}
 }
 
@@ -73,9 +76,23 @@ func (c *profileController) GetSelfProfile(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
 	}
+
+	wallet, err := c.walletService.GetWalletsByUserId(userData.UserId)
+	if err != nil {
+		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
+	}
+
+	price, err := constants.GetLUNCPriceCoinPaprika()
+	if err != nil {
+		price = 0
+	}
+
 	return ctx.JSON(map[string]interface{}{
-		"data":    res,
-		"success": true,
+		"data":        res,
+		"wallet":      wallet,
+		"lunc_price":  price,
+		"ticket_rate": constants.TICKET_BUY_RATE,
+		"success":     true,
 	})
 }
 

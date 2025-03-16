@@ -8,5 +8,42 @@ option go_package = "./";
 import "proto/protos/common.proto";
 
 service WinnerService{
-    rpc GetWinnersByGameId(GameId) returns (DivisionResults);
+    rpc GetWinnersByGameId(GameId) returns (Winner);
+    rpc GetWinnersByGameIdCount(GameId) returns (WinnerCount);
+    rpc UpdateTotalPaid(UpdateTotalPaidRequest) returns (Empty);
+    rpc GetLastWinnersByGameType(GameTypeRequest) returns (Winner);
+
+}
+
+message GetWinnerGameByGameId{
+    string game_id = 1;
+}
+
+message UpdateTotalPaidRequest{
+    string game_id = 1;
+    string total_paid = 2; 
+}
+
+message Winner{
+    int32 id = 1;
+    string game_id = 2;
+    int32 game_type = 3;
+    DivisionResults divisions = 4;
+    string result_number = 5;
+    uint32 prize = 6;
+    bool jackpot = 7;
+    optional string TotalPaid = 8;
+    string created_at = 9;
+}
+
+message WinnerCount{
+    int32 id = 1;
+    string game_id = 2;
+    int32 game_type = 3;
+    DivisionResultsCount divisions = 4;
+    string result_number = 5;
+    uint32 prize = 6;
+    bool jackpot = 7;
+    optional string TotalPaid = 8;
+    string created_at = 9;
 }

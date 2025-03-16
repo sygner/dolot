@@ -40,6 +40,7 @@ func (c *ProfileHandler) AddProfile(ctx context.Context, request *pb.AddProfileR
 		Sid:           res.Sid,
 		Username:      res.Username,
 		CreatedAt:     fmt.Sprintf("%d", res.CreatedAt.Unix()),
+		HighestRank:   res.HighestRank,
 	}, nil
 }
 
@@ -59,6 +60,7 @@ func (c *ProfileHandler) GetProfileByUsername(ctx context.Context, request *pb.U
 		Sid:           res.Sid,
 		Username:      res.Username,
 		CreatedAt:     fmt.Sprintf("%d", res.CreatedAt.Unix()),
+		HighestRank:   res.HighestRank,
 	}, nil
 }
 
@@ -78,6 +80,7 @@ func (c *ProfileHandler) GetProfileBySid(ctx context.Context, request *pb.Sid) (
 		Sid:           res.Sid,
 		Username:      res.Username,
 		CreatedAt:     fmt.Sprintf("%d", res.CreatedAt.Unix()),
+		HighestRank:   res.HighestRank,
 	}, nil
 }
 func (c *ProfileHandler) GetProfileByUserId(ctx context.Context, request *pb.UserId) (*pb.Profile, error) {
@@ -96,6 +99,7 @@ func (c *ProfileHandler) GetProfileByUserId(ctx context.Context, request *pb.Use
 		Sid:           res.Sid,
 		Username:      res.Username,
 		CreatedAt:     fmt.Sprintf("%d", res.CreatedAt.Unix()),
+		HighestRank:   res.HighestRank,
 	}, nil
 }
 

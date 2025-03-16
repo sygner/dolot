@@ -10,5 +10,7 @@ import (
 func WinnerGroup(app fiber.Router, winnerController controllers.WinnerHandler, middleware middleware.MiddlewareService) {
 	winnerGroup := app.Group("/game/winner")
 	winnerGroup.Use(middleware.VerificationMiddleware)
-	winnerGroup.Get("/:game_id", winnerController.GetWinnersByGameId)
+	winnerGroup.Get("/gm/:game_id", winnerController.GetWinnersByGameId)
+	winnerGroup.Get("/gm/c/:game_id", winnerController.GetWinnersByGameIdCount)
+	winnerGroup.Put("/total_paid", winnerController.UpdateTotalPaidUsers)
 }

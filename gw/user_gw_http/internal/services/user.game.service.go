@@ -5,6 +5,7 @@ import (
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/types"
 	pb "dolott_user_gw_http/proto/api/game"
+	ticket_pb "dolott_user_gw_http/proto/api/ticket"
 	"fmt"
 )
 
@@ -17,13 +18,15 @@ type (
 		GetAllUserGames(int32) ([]string, *types.Error)
 	}
 	userGameService struct {
-		userClient pb.UserServiceClient
+		userClient   pb.UserServiceClient
+		ticketClient ticket_pb.TicketServiceClient
 	}
 )
 
-func NewUserGameService(userClient pb.UserServiceClient) UserGameService {
+func NewUserGameService(userClient pb.UserServiceClient, ticketClient ticket_pb.TicketServiceClient) UserGameService {
 	return &userGameService{
-		userClient: userClient,
+		userClient:   userClient,
+		ticketClient: ticketClient,
 	}
 }
 
@@ -41,16 +44,38 @@ func (c *userGameService) AddUserChoice(data *models.AddUserChoiceDTO) (*models.
 			ChosenBonusNumbers: data.ChosenBonusNumbers[i],
 		})
 	}
+	_, err := c.ticketClient.UseTickets(context.Background(), &ticket_pb.UseTicketsRequest{
+		UserId:            data.UserId,
+		GameId:            data.GameId,
+		TotalUsingTickets: int32(len(chosenMainNumbers)),
+	})
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
 	res, err := c.userClient.AddUserChoice(context.Background(), &pb.AddUserChoiceRequest{
 		UserId:             data.UserId,
 		GameId:             data.GameId,
 		ChosenMainNumbers:  chosenMainNumbers,
 		ChosenBonusNumbers: chosenBonusNumbers,
+		ShouldReturn:       data.ShouldReturn,
 	})
 	if err != nil {
+		tickets := make([]*ticket_pb.AddTicketRequest, 0)
+		for i := 0; i < int(int32(len(chosenMainNumbers))); i++ {
+			tickets = append(tickets, &ticket_pb.AddTicketRequest{UserId: data.UserId, TicketType: "purchased"})
+		}
+		_, rerr := c.ticketClient.AddTickets(context.Background(), &ticket_pb.AddTicketsRequest{
+			Tickets: tickets,
+		})
+		fmt.Println(rerr)
 		return nil, types.ExtractGRPCErrDetails(err)
 	}
-	return toUserChoiceProto(res), nil
+	// check id is not nil
+	if res != nil && res.Id != "" {
+		return toUserChoiceProto(res), nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (c *userGameService) GetUserChoicesByUserId(data int32, pagination *models.Pagination) (*models.UserChoices, *types.Error) {

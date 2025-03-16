@@ -10,6 +10,7 @@ import (
 type (
 	UserGameHandler interface {
 		AddUserChoice(*fiber.Ctx) error
+		AddUserChoices(*fiber.Ctx) error
 		GetUserChoicesByUserId(*fiber.Ctx) error
 		GetUserChoicesByUserIdAndTimeRange(*fiber.Ctx) error
 		GetUserChoicesByGameIdAndPagination(*fiber.Ctx) error
@@ -48,10 +49,59 @@ func (c *userGameHandler) AddUserChoice(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
 	}
-	return ctx.JSON(map[string]interface{}{
-		"data":    res,
-		"success": true,
-	})
+	if res != nil {
+		return ctx.JSON(map[string]interface{}{
+			"data":    res,
+			"success": true,
+		})
+	} else {
+		return ctx.JSON(map[string]interface{}{
+			"message": "added user choice successfully",
+			"success": true,
+		})
+	}
+}
+
+func (c *userGameHandler) AddUserChoices(ctx *fiber.Ctx) error {
+	addUserChoicesDTO := new(models.AddUserChoicesDTO)
+	if err := ctx.BodyParser(addUserChoicesDTO); err != nil {
+		return ctx.Status(400).JSON(map[string]interface{}{
+			"message": "wrong body, error code #185",
+			"success": false,
+		})
+	}
+
+	localData := ctx.Locals("user_data")
+	if localData == nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(map[string]interface{}{
+			"message": "internal issue, error code #186",
+			"success": false,
+		})
+	}
+	userData := localData.(models.Token)
+	allResult := make([]models.UserChoice, 0)
+	for _, addUserChoiceDTO := range addUserChoicesDTO.UserChoices {
+		addUserChoiceDTO.UserId = userData.UserId
+		res, err := c.userGameService.AddUserChoice(&addUserChoiceDTO)
+		if err != nil {
+			return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
+		}
+		if res != nil {
+			allResult = append(allResult, *res)
+		}
+	}
+	if allResult != nil || len(allResult) > 0 {
+		return ctx.JSON(map[string]interface{}{
+			"data":    allResult,
+			"success": true,
+		})
+	} else {
+		return ctx.JSON(map[string]interface{}{
+			"message": "added all user choices successfully",
+			"success": true,
+		})
+	}
+
 }
 
 func (c *userGameHandler) GetUserChoicesByUserId(ctx *fiber.Ctx) error {

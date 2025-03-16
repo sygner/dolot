@@ -22,13 +22,15 @@ type (
 	authenticationController struct {
 		authenticationService services.AuthenticationService
 		profileService        services.ProfileService
+		walletService         services.WalletService
 	}
 )
 
-func NewAuthenticationController(authenticationService services.AuthenticationService, profileService services.ProfileService) AuthenticationController {
+func NewAuthenticationController(authenticationService services.AuthenticationService, profileService services.ProfileService, walletService services.WalletService) AuthenticationController {
 	return &authenticationController{
 		authenticationService: authenticationService,
 		profileService:        profileService,
+		walletService:         walletService,
 	}
 }
 
@@ -100,6 +102,7 @@ func (c *authenticationController) Signup(ctx *fiber.Ctx) error {
 
 	if res != nil {
 		profile, rerr := c.profileService.GetProfileByUserId(res.UserId)
+		wallets := make([]models.Wallet, 0)
 		if rerr != nil {
 			if rerr.Code != 5 {
 				return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
@@ -114,14 +117,37 @@ func (c *authenticationController) Signup(ctx *fiber.Ctx) error {
 			if rerr != nil {
 				return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
 			}
+			wallet, rerr := c.walletService.CreateWallet(res.UserId, 1)
+			if rerr != nil {
+				return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+			}
+			wallets = append(wallets, *wallet)
 		}
+		if len(wallets) == 0 {
+			fmt.Println("Wallet User id ", res.UserId)
+
+			wallets, rerr = c.walletService.GetWalletsByUserId(res.UserId)
+			if rerr != nil {
+				fmt.Println(rerr.Code)
+				if rerr.Code == 5 {
+					wallet, rerr := c.walletService.CreateWallet(res.UserId, 1)
+					if rerr != nil {
+						return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+					}
+					wallets = append(wallets, *wallet)
+				} else {
+					return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+				}
+			}
+		}
+
 		return ctx.JSON(map[string]interface{}{
 			"data":    res,
 			"profile": profile,
+			"wallets": wallets,
 			"success": true,
 		})
 	}
-
 	return ctx.JSON(map[string]interface{}{
 		"message": "Code has been sent",
 		"success": true,
@@ -151,6 +177,7 @@ func (c *authenticationController) Signin(ctx *fiber.Ctx) error {
 	}
 	if res != nil {
 		profile, rerr := c.profileService.GetProfileByUserId(res.UserId)
+		wallets := make([]models.Wallet, 0)
 		if rerr != nil {
 			if rerr.Code != 5 {
 				return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
@@ -165,10 +192,30 @@ func (c *authenticationController) Signin(ctx *fiber.Ctx) error {
 			if rerr != nil {
 				return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
 			}
+			wallet, rerr := c.walletService.CreateWallet(res.UserId, 1)
+			if rerr != nil {
+				return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+			}
+			wallets = append(wallets, *wallet)
+		}
+		if len(wallets) == 0 {
+			wallets, rerr = c.walletService.GetWalletsByUserId(res.UserId)
+			if rerr != nil {
+				if rerr.Code == 5 {
+					wallet, rerr := c.walletService.CreateWallet(res.UserId, 1)
+					if rerr != nil {
+						return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+					}
+					wallets = append(wallets, *wallet)
+				} else {
+					return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+				}
+			}
 		}
 		return ctx.JSON(map[string]interface{}{
 			"data":    res,
 			"profile": profile,
+			"wallets": wallets,
 			"success": true,
 		})
 	}
@@ -194,7 +241,10 @@ func (c *authenticationController) Verify(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
 	}
+
 	profile, rerr := c.profileService.GetProfileByUserId(res.Token.UserId)
+	wallets := make([]models.Wallet, 0)
+
 	if rerr != nil {
 		if rerr.Code != 5 {
 			return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
@@ -209,10 +259,31 @@ func (c *authenticationController) Verify(ctx *fiber.Ctx) error {
 		if rerr != nil {
 			return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
 		}
+		wallet, rerr := c.walletService.CreateWallet(res.Token.UserId, 1)
+		if rerr != nil {
+			return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+		}
+		wallets = append(wallets, *wallet)
+	}
+
+	if len(wallets) == 0 {
+		wallets, rerr = c.walletService.GetWalletsByUserId(res.Token.UserId)
+		if rerr != nil {
+			if rerr.Code == 5 {
+				wallet, rerr := c.walletService.CreateWallet(res.Token.UserId, 1)
+				if rerr != nil {
+					return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+				}
+				wallets = append(wallets, *wallet)
+			} else {
+				return ctx.Status(rerr.ErrorToHttpStatus()).JSON(rerr.ErrorToJsonMessage())
+			}
+		}
 	}
 	return ctx.JSON(map[string]interface{}{
 		"data":    res,
 		"profile": profile,
+		"wallets": wallets,
 		"success": true,
 	})
 }

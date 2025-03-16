@@ -18,6 +18,65 @@ service GameService{
     rpc AddResultByGameId(AddResultByGameIdRequest) returns (DivisionResults);
     rpc GetAllPreviousGames(Pagination) returns (Games);
     rpc GetAllGames(Pagination) returns (Games);
+    rpc GetAllGameTypes(Empty) returns (GameTypes);
+    rpc ChangeGameDetailCalculation(ChangeGameDetailCalculationRequest) returns (GameTypes);
+    rpc GetAllUserPreviousGames(GetAllUserPreviousGamesRequest) returns (Games);
+    rpc GetAllUserPreviousGamesByGameType(GetAllUserPreviousGamesByGameTypeRequest) returns (Games);
+    rpc GetAllUserChoiceDivisionsByGameId(GetAllUserChoiceDivisionsByGameIdRequest) returns (DivisionResults);
+    rpc GetAllUsersChoiceDivisionsByGameId(GameId) returns (DivisionResults);
+    rpc UpdateGamePrizeByGameId(UpdateGamePrizeByGameIdRequest) returns (Empty);
+}
+
+message UpdateGamePrizeByGameIdRequest{
+    string game_id = 1;
+    optional uint32 prize = 2;
+    bool auto_compute = 3;
+}
+
+message GetAllUserChoiceDivisionsByGameIdRequest {
+    int32 user_id = 1;
+    string gameId = 2;
+}
+
+message GetAllUserPreviousGamesRequest {
+    int32 user_id = 1;
+    Pagination pagination = 2;
+}
+
+message GetAllUserPreviousGamesByGameTypeRequest {
+    int32 user_id = 1;
+    Pagination pagination = 2;
+    string game_type = 3;
+}
+
+message PreviousGames{
+    Game game = 1;
+    DivisionResult division_result = 2;
+}
+
+message GetAllUserPreviousGamesResponse{
+    repeated PreviousGames previous_games = 1;
+}
+message GameTypeDetails{
+    int32 id = 1;
+    string name = 2;
+    string description = 3;
+    string type_name = 4;
+    string day_name = 5;
+    int32 prize_reward = 6;
+    int32 token_burn = 7;
+}
+
+message ChangeGameDetailCalculationRequest{
+    GameType game_type = 1;
+    optional string day_name = 2;
+    int32 prize_reward = 3;
+    int32 token_burn = 4; 
+    bool auto_compute = 5;
+}
+
+message GameTypes{
+    repeated GameTypeDetails game_types = 1;
 }
 
 
@@ -32,17 +91,14 @@ message GetGamesByCreatorIdRequest{
 }
 
 
-message GameTypeRequest{
-    GameType game_type = 1;
-    int32 limit = 2;
-}
-
 message AddGameRequest{
     string name = 1;                        // Name of the game
     GameType game_type = 2;  
     string start_time = 3; // Start time for the game's drawing window
     string end_time = 4;   // End time for the game's drawing window
     int32 creator_id = 5;   // End time for the game's drawing window
+    optional uint32 prize = 6; // Prize that Admin Entered  
+    bool auto_compute = 7; // Auto Compute for Prize 
 }
 
 
@@ -60,7 +116,9 @@ message Game {
     string end_time = 9;   // End time for the game's drawing window
     int32 creator_id = 10;                  // ID of the user/admin who created the game
     optional string result = 11;                     // Storing the result as a string
-    string created_at = 12; // Timestamp when the game was created
+    optional uint32 prize = 12; // Prize that Admin Entered  
+    bool auto_compute = 13; // Auto Compute for Prize 
+    string created_at = 14; // Timestamp when the game was created
 }
 
 message Games{

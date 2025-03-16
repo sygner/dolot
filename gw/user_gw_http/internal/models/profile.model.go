@@ -13,4 +13,5 @@ type Profile struct {
 	WonGames      int32     `json:"won_games"`
 	LostGames     int32     `json:"lost_games"`
 	CreatedAt     time.Time `json:"created_at"`
+	HighestRank   int32     `json:"highest_rank"`
 }

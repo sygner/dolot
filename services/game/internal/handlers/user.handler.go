@@ -40,11 +40,15 @@ func (c *UserHandler) AddUserChoice(ctx context.Context, request *pb.AddUserChoi
 		ChosenMainNumbers:  outMainNumbers,
 		ChosenBonusNumbers: outBonusNumbers,
 	}
-	res, err := c.userServices.AddUserChoice(data)
+	res, err := c.userServices.AddUserChoice(data, request.ShouldReturn)
 	if err != nil {
 		return nil, err.ErrorToGRPCStatus()
 	}
-	return toUserChoiceProto(res), nil
+	if request.ShouldReturn {
+		return toUserChoiceProto(res), nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (c *UserHandler) GetUserChoicesByUserId(ctx context.Context, request *pb.GetUserChoicesByUserIdRequest) (*pb.UserChoices, error) {

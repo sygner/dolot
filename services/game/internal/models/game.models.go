@@ -4,6 +4,17 @@ import (
 	"time"
 )
 
+type GameTypeDetail struct {
+	Id          int32  `db:"id" json:"id"`
+	Name        string `db:"name" json:"name"`
+	Description string `db:"description" json:"description"`
+	TypeName    string `db:"type_name" json:"type_name"`
+	DayName     string `db:"day_name" json:"day_name"`
+	PrizeReward int32  `db:"prize_reward" json:"prize_reward"`
+	TokenBurn   int32  `db:"token_burn" json:"token_burn"`
+	AutoCompute bool   `db:"auto_compute" json:"auto_compute"`
+}
+
 type Game struct {
 	Id               string    `db:"id" json:"id"`
 	Name             string    `db:"name" json:"name"`
@@ -16,6 +27,8 @@ type Game struct {
 	EndTime          time.Time `db:"end_time" json:"end_time"`
 	CreatorId        int32     `db:"creator_id" json:"creator_id"`
 	Result           *string   `db:"result" json:"result"`
+	Prize            *uint32   `db:"prize" json:"prize"`
+	AutoCompute      bool      `db:"auto_compute" json:"auto_compute"`
 	CreatedAt        time.Time `db:"created_at" json:"created_at"`
 }
 
@@ -61,7 +74,7 @@ func FromStringToMainNumberRange(s int32) int32 {
 	case 1:
 		return 45
 	case 2:
-		return 69
+		return 35
 	case 3:
 		return 69
 	default:
@@ -76,7 +89,7 @@ func FromStringToNumberMainNumbers(s int32) int32 {
 	case 1:
 		return 7
 	case 2:
-		return 5
+		return 7
 	case 3:
 		return 5
 	default:
@@ -110,7 +123,7 @@ func FromStringToBonusNumberRange(s int32) *int32 {
 	case 1: // Ozlotto (no bonus number range)
 		bonusNumberRange = nil
 	case 2: // Powerball
-		bonusNumberRangeValue := int32(26) // Powerball bonus number range is 1-26
+		bonusNumberRangeValue := int32(20) // Powerball bonus number range is 1-26
 		bonusNumberRange = &bonusNumberRangeValue
 	case 3: // American Powerball
 		bonusNumberRangeValue := int32(26) // American Powerball bonus number range is also 1-26
@@ -124,4 +137,14 @@ func FromStringToBonusNumberRange(s int32) *int32 {
 type Games struct {
 	Games []Game `json:"game"`
 	Total *int32 `json:"total"`
+}
+
+type PreviousGame struct {
+	Game           Game             `json:"game"`
+	DivisionResult []DivisionResult `json:"division_result"`
+}
+
+type PreviousGames struct {
+	PreviousGames []PreviousGame `json:"games"`
+	Total         *int32         `json:"total"`
 }

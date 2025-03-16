@@ -18,23 +18,34 @@ type UserChoice struct {
 	CreatedAt          time.Time `json:"created_at"`
 }
 
-type UserChoiceResultDetail struct {
-	UserId            int32   `json:"user_id"`
-	ChosenMainNumbers []int32 `json:"chosen_main_numbers"`
-	ChosenBonusNumber int32   `json:"chosen_bonus_number"`
-	MatchCount        int32   `json:"match_count"`
-}
-
 type UserChoices struct {
 	UserChoices []UserChoice `json:"user_choice"`
 	Total       *int32       `json:"total"`
 }
 
+type UserChoiceResultDetail struct {
+	UserId            int32   `json:"user_id"`
+	ChosenMainNumbers []int32 `json:"chosen_main_numbers"`
+	ChosenBonusNumber int32   `json:"chosen_bonus_number"`
+	MatchCount        int32   `json:"match_count"`
+	HasBonus          bool    `json:"has_bonus"`
+}
+
 // DivisionResult represents the result of categorizing user choices into divisions based on match counts.
 type DivisionResult struct {
+	Division    string                   `json:"division"`
 	MatchCount  int32                    `json:"match_count"`  // The number of matching numbers
 	HasBonus    bool                     `json:"has_bonus"`    // Whether the division requires a matching bonus number
 	UserChoices []UserChoiceResultDetail `json:"user_choices"` // A list of user choices that belong to this division
+}
+
+func SearchDivision(dr []DivisionResult, division string) *DivisionResult {
+	for i := range dr {
+		if dr[i].Division == division {
+			return &dr[i] // Return a pointer to the actual slice element
+		}
+	}
+	return nil // If not found, return nil
 }
 
 type BonusDivision struct {
@@ -50,10 +61,10 @@ var (
 		{MatchCount: 6, HasBonus: false},
 		{MatchCount: 5, HasBonus: true},
 		{MatchCount: 5, HasBonus: false},
-		{MatchCount: 4, HasBonus: true},
-		{MatchCount: 3, HasBonus: true},
-		{MatchCount: 2, HasBonus: true},
-		{MatchCount: 2, HasBonus: false},
+		// {MatchCount: 4, HasBonus: true},
+		// {MatchCount: 3, HasBonus: true},
+		// {MatchCount: 2, HasBonus: true},
+		// {MatchCount: 2, HasBonus: false},
 	}
 
 	AmericanPowerballDivisions = []BonusDivision{
@@ -63,8 +74,8 @@ var (
 		{MatchCount: 4, HasBonus: false},
 		{MatchCount: 3, HasBonus: true},
 		{MatchCount: 3, HasBonus: false},
-		{MatchCount: 2, HasBonus: true},
-		{MatchCount: 1, HasBonus: true},
-		{MatchCount: 0, HasBonus: true},
+		// {MatchCount: 2, HasBonus: true},
+		// {MatchCount: 1, HasBonus: true},
+		// {MatchCount: 0, HasBonus: true},
 	}
 )

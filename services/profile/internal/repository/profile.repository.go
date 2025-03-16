@@ -7,12 +7,26 @@ import (
 )
 
 func (c *profileRepository) GetProfileByUsername(username string) (*models.Profile, *types.Error) {
-	query := `SELECT user_id, sid, username, score, impression, rank, games_quantity, won_games, lost_games, created_at FROM profiles WHERE username = $1`
+	query := `SELECT 
+    user_id, 
+    sid, 
+    username, 
+    score, 
+    impression, 
+    rank, 
+    games_quantity, 
+    won_games, 
+    lost_games, 
+    created_at, 
+    (SELECT COALESCE(MAX(rank), 0) FROM profiles) AS highest_rank
+	FROM profiles 
+	WHERE username = $1;
+`
 
 	var profile models.Profile
 	err := c.db.QueryRow(query, username).Scan(
 		&profile.UserId, &profile.Sid, &profile.Username, &profile.Score,
-		&profile.Impression, &profile.Rank, &profile.GamesQuantity, &profile.WonGames, &profile.LostGames, &profile.CreatedAt)
+		&profile.Impression, &profile.Rank, &profile.GamesQuantity, &profile.WonGames, &profile.LostGames, &profile.CreatedAt, &profile.HighestRank)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, types.NewNotFoundError("profile not found #3002")
@@ -23,12 +37,13 @@ func (c *profileRepository) GetProfileByUsername(username string) (*models.Profi
 }
 
 func (c *profileRepository) GetProfileBySid(sid string) (*models.Profile, *types.Error) {
-	query := `SELECT user_id, sid, username, score, impression, rank, games_quantity, won_games, lost_games, created_at FROM profiles WHERE sid = $1`
+	query := `SELECT user_id, sid, username, score, impression, rank, games_quantity, won_games, lost_games, created_at, 
+    (SELECT COALESCE(MAX(rank), 0) FROM profiles) AS highest_rank FROM profiles WHERE sid = $1`
 
 	var profile models.Profile
 	err := c.db.QueryRow(query, sid).Scan(
 		&profile.UserId, &profile.Sid, &profile.Username, &profile.Score,
-		&profile.Impression, &profile.Rank, &profile.GamesQuantity, &profile.WonGames, &profile.LostGames, &profile.CreatedAt)
+		&profile.Impression, &profile.Rank, &profile.GamesQuantity, &profile.WonGames, &profile.LostGames, &profile.CreatedAt, &profile.HighestRank)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, types.NewNotFoundError("profile not found #3019")
@@ -39,12 +54,13 @@ func (c *profileRepository) GetProfileBySid(sid string) (*models.Profile, *types
 }
 
 func (c *profileRepository) GetProfileByUserId(userId int32) (*models.Profile, *types.Error) {
-	query := `SELECT user_id, sid, username, score, impression, rank, games_quantity, won_games, lost_games, created_at FROM profiles WHERE user_id = $1`
+	query := `SELECT user_id, sid, username, score, impression, rank, games_quantity, won_games, lost_games, created_at, 
+    (SELECT COALESCE(MAX(rank), 0) FROM profiles) AS highest_rank FROM profiles WHERE user_id = $1`
 
 	var profile models.Profile
 	err := c.db.QueryRow(query, userId).Scan(
 		&profile.UserId, &profile.Sid, &profile.Username, &profile.Score,
-		&profile.Impression, &profile.Rank, &profile.GamesQuantity, &profile.WonGames, &profile.LostGames, &profile.CreatedAt)
+		&profile.Impression, &profile.Rank, &profile.GamesQuantity, &profile.WonGames, &profile.LostGames, &profile.CreatedAt, &profile.HighestRank)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

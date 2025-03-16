@@ -10,7 +10,7 @@ import (
 
 type (
 	UserServices interface {
-		AddUserChoice(*models.AddUserChoiceDTO) (*models.UserChoice, *types.Error)
+		AddUserChoice(*models.AddUserChoiceDTO, bool) (*models.UserChoice, *types.Error)
 		GetUserChoicesByUserId(int32, *models.Pagination) (*models.UserChoices, *types.Error)
 		GetUserChoicesByUserIdAndTimeRange(int32, time.Time, time.Time) ([]models.UserChoice, *types.Error)
 		GetUserChoicesByGameIdAndPagination(string, *models.Pagination) (*models.UserChoices, *types.Error)
@@ -26,7 +26,7 @@ func NewUserServices(repository repository.GameRepository) UserServices {
 		repository: repository,
 	}
 }
-func (c *userServices) AddUserChoice(data *models.AddUserChoiceDTO) (*models.UserChoice, *types.Error) {
+func (c *userServices) AddUserChoice(data *models.AddUserChoiceDTO, shouldReturn bool) (*models.UserChoice, *types.Error) {
 	exists, err := c.repository.CheckGameExistsByIdAndEndTime(data.GameId)
 	if err != nil {
 		return nil, err
@@ -45,14 +45,19 @@ func (c *userServices) AddUserChoice(data *models.AddUserChoiceDTO) (*models.Use
 	if err != nil {
 		return nil, err
 	}
-	return &models.UserChoice{
-		Id:                 id,
-		UserId:             data.UserId,
-		GameId:             data.GameId,
-		ChosenMainNumbers:  data.ChosenMainNumbers,
-		ChosenBonusNumbers: data.ChosenBonusNumbers,
-		CreatedAt:          time.Now(),
-	}, nil
+	if shouldReturn {
+		return &models.UserChoice{
+			Id:                 id,
+			UserId:             data.UserId,
+			GameId:             data.GameId,
+			ChosenMainNumbers:  data.ChosenMainNumbers,
+			ChosenBonusNumbers: data.ChosenBonusNumbers,
+			CreatedAt:          time.Now(),
+		}, nil
+	} else {
+		return nil, nil
+	}
+
 }
 
 func (c *userServices) GetUserChoicesByUserId(userId int32, pagination *models.Pagination) (*models.UserChoices, *types.Error) {
