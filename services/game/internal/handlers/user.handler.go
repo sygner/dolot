@@ -39,6 +39,7 @@ func (c *UserHandler) AddUserChoice(ctx context.Context, request *pb.AddUserChoi
 		GameId:             request.GameId,
 		ChosenMainNumbers:  outMainNumbers,
 		ChosenBonusNumbers: outBonusNumbers,
+		BoughtPrice:        request.BoughtPrice,
 	}
 	res, err := c.userServices.AddUserChoice(data, request.ShouldReturn)
 	if err != nil {

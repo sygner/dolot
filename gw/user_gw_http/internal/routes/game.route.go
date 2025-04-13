@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GameGroup(app fiber.Router, gameController controllers.GameHandler, middleware middleware.MiddlewareService) {
+func GameGroup(app fiber.Router, gameController controllers.GameController, middleware middleware.MiddlewareService) {
 	gameGroup := app.Group("/game")
 	gameGroup.Get("/dl", gameController.DownloadGameTypeFile)
 
@@ -29,4 +29,6 @@ func GameGroup(app fiber.Router, gameController controllers.GameHandler, middlew
 	gameGroup.Get("/previous/usr/choices/:game_id", gameController.GetAllUserChoiceDivisionsByGameId)
 	gameGroup.Get("/previous/choices/:game_id", gameController.GetAllUsersChoiceDivisionsByGameId)
 	gameGroup.Put("/edit/prize", gameController.UpdateGamePrizeByGameId)
+	gameGroup.Get("/all/filter", gameController.GetUserGamesByTimesAndGameTypes)
+
 }

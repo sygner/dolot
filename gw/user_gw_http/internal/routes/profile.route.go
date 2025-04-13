@@ -14,5 +14,11 @@ func ProfileGroup(app fiber.Router, profileController controllers.ProfileControl
 	profileGroup.Get("/self", profileController.GetSelfProfile)
 	profileGroup.Put("/update", profileController.UpdateProfile)
 	profileGroup.Get("/sid/:sid", profileController.GetProfileBySid)
-
+	profileGroup.Put("/update/impression", profileController.ChangeUserImpression)
+	profileGroup.Post("/impression/exchange", profileController.ImpressionExchange)
+	profileGroup.Get("/search/username", profileController.SearchUsername)
+	profileGroup.Get("/rank/usr", profileController.GetAllUserRanking)
+	profileGroup.Get("/rank/leaderboard", profileController.GetUserLeaderBoard)
+	profileGroup.Put("/rank/update", profileController.UpdateUserRank)
+	profileGroup.Put("/update/impression/dcredit", profileController.ChangeImpressionAndDCoin)
 }

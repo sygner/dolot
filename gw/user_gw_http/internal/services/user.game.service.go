@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"dolott_user_gw_http/internal/constants"
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/types"
 	pb "dolott_user_gw_http/proto/api/game"
@@ -52,16 +53,21 @@ func (c *userGameService) AddUserChoice(data *models.AddUserChoiceDTO) (*models.
 	if err != nil {
 		return nil, types.ExtractGRPCErrDetails(err)
 	}
+	luncPrice, rerr := constants.GetLUNCPriceCoinPaprika()
+	if rerr != nil {
+		return nil, rerr
+	}
 	res, err := c.userClient.AddUserChoice(context.Background(), &pb.AddUserChoiceRequest{
 		UserId:             data.UserId,
 		GameId:             data.GameId,
 		ChosenMainNumbers:  chosenMainNumbers,
 		ChosenBonusNumbers: chosenBonusNumbers,
+		BoughtPrice:        float32(luncPrice) * float32(len(chosenMainNumbers)),
 		ShouldReturn:       data.ShouldReturn,
 	})
 	if err != nil {
 		tickets := make([]*ticket_pb.AddTicketRequest, 0)
-		for i := 0; i < int(int32(len(chosenMainNumbers))); i++ {
+		for i := 0; i < int(len(chosenMainNumbers)); i++ {
 			tickets = append(tickets, &ticket_pb.AddTicketRequest{UserId: data.UserId, TicketType: "purchased"})
 		}
 		_, rerr := c.ticketClient.AddTickets(context.Background(), &ticket_pb.AddTicketsRequest{

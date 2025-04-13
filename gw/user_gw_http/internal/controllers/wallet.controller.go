@@ -3,6 +3,7 @@ package controllers
 import (
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/services"
+	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,6 +24,9 @@ type (
 		GetTransactionsByWalletIdAndUserId(*fiber.Ctx) error
 		GetTransactionsByUserId(*fiber.Ctx) error
 		AddTransaction(*fiber.Ctx) error
+		GetPreTransactionDetail(*fiber.Ctx) error
+		GetTransactionsByWalletIdAndUserIdAndPagination(*fiber.Ctx) error
+		GetTransactionsByUserIdAndPagination(*fiber.Ctx) error
 	}
 	walletController struct {
 		walletService services.WalletService
@@ -344,6 +348,37 @@ func (c *walletController) GetTransactionsByUserId(ctx *fiber.Ctx) error {
 	})
 }
 
+func (c *walletController) GetPreTransactionDetail(ctx *fiber.Ctx) error {
+	addTransactionDTO := new(models.AddTransactionDTO)
+	if err := ctx.BodyParser(addTransactionDTO); err != nil {
+		return ctx.Status(400).JSON(map[string]interface{}{
+			"message": "wrong body, error code #190",
+			"success": false,
+		})
+	}
+
+	localData := ctx.Locals("user_data")
+	if localData == nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(map[string]interface{}{
+			"message": "internal issue, error code #191",
+			"success": false,
+		})
+	}
+	userData := localData.(models.Token)
+	addTransactionDTO.FromWalletUserId = userData.UserId
+
+	res, err := c.walletService.GetPreTransactionDetail(addTransactionDTO)
+	if err != nil {
+		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
+	}
+
+	return ctx.JSON(map[string]interface{}{
+		"data":    res,
+		"success": true,
+	})
+
+}
+
 func (c *walletController) AddTransaction(ctx *fiber.Ctx) error {
 	addTransactionDTO := new(models.AddTransactionDTO)
 	if err := ctx.BodyParser(addTransactionDTO); err != nil {
@@ -372,5 +407,70 @@ func (c *walletController) AddTransaction(ctx *fiber.Ctx) error {
 		"data":    res,
 		"success": true,
 	})
+}
 
+func (c *walletController) GetTransactionsByWalletIdAndUserIdAndPagination(ctx *fiber.Ctx) error {
+	getTransactionsByUserIdAndPaginationDTO := new(models.GetTransactionsByUserIdAndPaginationDTO)
+	if err := ctx.BodyParser(getTransactionsByUserIdAndPaginationDTO); err != nil {
+		return ctx.Status(400).JSON(map[string]interface{}{
+			"message": "wrong body, error code #192",
+			"success": false,
+		})
+	}
+
+	if getTransactionsByUserIdAndPaginationDTO.WalletId == nil {
+		return ctx.Status(400).JSON(map[string]interface{}{
+			"message": "wallet id cannot be empty, error code #193",
+			"success": false,
+		})
+	}
+
+	localData := ctx.Locals("user_data")
+	if localData == nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(map[string]interface{}{
+			"message": "internal issue, error code #194",
+			"success": false,
+		})
+	}
+	userData := localData.(models.Token)
+
+	res, err := c.walletService.GetTransactionsByWalletIdAndUserIdAndPagination(*getTransactionsByUserIdAndPaginationDTO.WalletId, userData.UserId, getTransactionsByUserIdAndPaginationDTO.Pagination)
+	if err != nil {
+		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
+	}
+	fmt.Println(res.Total)
+
+	return ctx.JSON(map[string]interface{}{
+		"data":    res,
+		"success": true,
+	})
+}
+
+func (c *walletController) GetTransactionsByUserIdAndPagination(ctx *fiber.Ctx) error {
+	getTransactionsByUserIdAndPaginationDTO := new(models.GetTransactionsByUserIdAndPaginationDTO)
+	if err := ctx.BodyParser(getTransactionsByUserIdAndPaginationDTO); err != nil {
+		return ctx.Status(400).JSON(map[string]interface{}{
+			"message": "wrong body, error code #195",
+			"success": false,
+		})
+	}
+
+	localData := ctx.Locals("user_data")
+	if localData == nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(map[string]interface{}{
+			"message": "internal issue, error code #196",
+			"success": false,
+		})
+	}
+	userData := localData.(models.Token)
+
+	res, err := c.walletService.GetTransactionsByUserIdAndPagination(userData.UserId, getTransactionsByUserIdAndPaginationDTO.Pagination)
+	if err != nil {
+		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
+	}
+
+	return ctx.JSON(map[string]interface{}{
+		"data":    res,
+		"success": true,
+	})
 }

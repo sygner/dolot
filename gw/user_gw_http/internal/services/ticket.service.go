@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"dolott_user_gw_http/internal/admin"
 	"dolott_user_gw_http/internal/constants"
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/types"
@@ -178,7 +179,7 @@ func (c *ticketService) GetAllTicketsByGameId(gameId string) (*models.Tickets, *
 }
 
 func (c *ticketService) BuyTickets(userId int32, totalTickets int32, fromWalletId int32, shouldReturn bool) (*models.Tickets, *types.Error) {
-	total := math.Round(float64(totalTickets) * constants.TICKET_BUY_RATE)
+	total := math.Round(float64(totalTickets) * admin.TICKET_BUY_RATE)
 	if total <= 0 {
 		return nil, types.NewBadRequestError("total tickets must be greater than 0")
 	}

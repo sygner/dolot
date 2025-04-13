@@ -3,6 +3,7 @@ package controllers
 import (
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/services"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,7 +12,7 @@ import (
 )
 
 type (
-	GameHandler interface {
+	GameController interface {
 		GetGameByGameId(*fiber.Ctx) error
 		AddGame(*fiber.Ctx) error
 		GetNextGamesByGameType(*fiber.Ctx) error
@@ -30,21 +31,22 @@ type (
 		GetAllUserChoiceDivisionsByGameId(*fiber.Ctx) error
 		GetAllUsersChoiceDivisionsByGameId(*fiber.Ctx) error
 		UpdateGamePrizeByGameId(*fiber.Ctx) error
+		GetUserGamesByTimesAndGameTypes(*fiber.Ctx) error
 	}
-	gameHandler struct {
+	gameController struct {
 		gameService     services.GameService
 		fileStoragePath string
 	}
 )
 
-func NewGameHandler(gameService services.GameService, fileStoragePath string) GameHandler {
-	return &gameHandler{
+func NewGameController(gameService services.GameService, fileStoragePath string) GameController {
+	return &gameController{
 		gameService:     gameService,
 		fileStoragePath: fileStoragePath,
 	}
 }
 
-func (c *gameHandler) GetGameByGameId(ctx *fiber.Ctx) error {
+func (c *gameController) GetGameByGameId(ctx *fiber.Ctx) error {
 	gameId := ctx.Params("game_id")
 	if gameId == "" {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -63,7 +65,7 @@ func (c *gameHandler) GetGameByGameId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) AddGame(ctx *fiber.Ctx) error {
+func (c *gameController) AddGame(ctx *fiber.Ctx) error {
 	addGameDTO := new(models.AddGameDTO)
 	if err := ctx.BodyParser(addGameDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -92,7 +94,7 @@ func (c *gameHandler) AddGame(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetNextGamesByGameType(ctx *fiber.Ctx) error {
+func (c *gameController) GetNextGamesByGameType(ctx *fiber.Ctx) error {
 	gameType := ctx.QueryInt("game_type")
 	limit := ctx.QueryInt("limit")
 	res, err := c.gameService.GetNextGamesByGameType(int32(gameType), int32(limit))
@@ -106,7 +108,7 @@ func (c *gameHandler) GetNextGamesByGameType(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetAllNextGames(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllNextGames(ctx *fiber.Ctx) error {
 	res, err := c.gameService.GetAllNextGames()
 	if err != nil {
 		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
@@ -118,7 +120,7 @@ func (c *gameHandler) GetAllNextGames(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetAllPreviousGames(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllPreviousGames(ctx *fiber.Ctx) error {
 	paginationDTO := new(models.Pagination)
 	if err := ctx.BodyParser(paginationDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -137,7 +139,7 @@ func (c *gameHandler) GetAllPreviousGames(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetAllGames(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllGames(ctx *fiber.Ctx) error {
 	paginationDTO := new(models.Pagination)
 	if err := ctx.BodyParser(paginationDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -156,7 +158,7 @@ func (c *gameHandler) GetAllGames(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) DownloadGameTypeFile(ctx *fiber.Ctx) error {
+func (c *gameController) DownloadGameTypeFile(ctx *fiber.Ctx) error {
 	fileName := ctx.Query("path", "")
 	if fileName == "" {
 		return ctx.Status(http.StatusBadRequest).SendString("File name is required")
@@ -176,7 +178,7 @@ func (c *gameHandler) DownloadGameTypeFile(ctx *fiber.Ctx) error {
 	return ctx.SendFile(absPath)
 }
 
-func (c *gameHandler) GetAllGameTypes(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllGameTypes(ctx *fiber.Ctx) error {
 	res, err := c.gameService.GetAllGameTypes()
 	if err != nil {
 		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
@@ -188,7 +190,7 @@ func (c *gameHandler) GetAllGameTypes(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) DeleteGameByGameId(ctx *fiber.Ctx) error {
+func (c *gameController) DeleteGameByGameId(ctx *fiber.Ctx) error {
 	gameId := ctx.Params("game_id")
 	if gameId == "" {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -206,7 +208,7 @@ func (c *gameHandler) DeleteGameByGameId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) CheckGameExistsByGameId(ctx *fiber.Ctx) error {
+func (c *gameController) CheckGameExistsByGameId(ctx *fiber.Ctx) error {
 	gameId := ctx.Params("game_id")
 	if gameId == "" {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -232,7 +234,7 @@ func (c *gameHandler) CheckGameExistsByGameId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetGamesByCreatorId(ctx *fiber.Ctx) error {
+func (c *gameController) GetGamesByCreatorId(ctx *fiber.Ctx) error {
 	userId := ctx.QueryInt("id")
 	paginationDTO := new(models.Pagination)
 	if err := ctx.BodyParser(paginationDTO); err != nil {
@@ -251,7 +253,7 @@ func (c *gameHandler) GetGamesByCreatorId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) AddResultByGameId(ctx *fiber.Ctx) error {
+func (c *gameController) AddResultByGameId(ctx *fiber.Ctx) error {
 	addGameResultDTO := new(models.AddGameResultDTO)
 	if err := ctx.BodyParser(addGameResultDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -269,7 +271,7 @@ func (c *gameHandler) AddResultByGameId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) ChangeGameDetailCalculation(ctx *fiber.Ctx) error {
+func (c *gameController) ChangeGameDetailCalculation(ctx *fiber.Ctx) error {
 	changeGameDetailCalculationDTO := new(models.ChangeGameDetailCalculationDTO)
 	if err := ctx.BodyParser(changeGameDetailCalculationDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -299,7 +301,7 @@ func (c *gameHandler) ChangeGameDetailCalculation(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetAllUserPreviousGames(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllUserPreviousGames(ctx *fiber.Ctx) error {
 	paginationDTO := new(models.Pagination)
 	if err := ctx.BodyParser(paginationDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -328,7 +330,7 @@ func (c *gameHandler) GetAllUserPreviousGames(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetAllUserPreviousGamesByGameType(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllUserPreviousGamesByGameType(ctx *fiber.Ctx) error {
 	getAllUserPreviousGamesByGameTypeDTO := new(models.GetAllUserPreviousGamesByGameTypeDTO)
 	if err := ctx.BodyParser(getAllUserPreviousGamesByGameTypeDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -367,7 +369,7 @@ func (c *gameHandler) GetAllUserPreviousGamesByGameType(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetAllUserChoiceDivisionsByGameId(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllUserChoiceDivisionsByGameId(ctx *fiber.Ctx) error {
 
 	gameId := ctx.Params("game_id")
 	if gameId == "" {
@@ -397,7 +399,7 @@ func (c *gameHandler) GetAllUserChoiceDivisionsByGameId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) GetAllUsersChoiceDivisionsByGameId(ctx *fiber.Ctx) error {
+func (c *gameController) GetAllUsersChoiceDivisionsByGameId(ctx *fiber.Ctx) error {
 	gameId := ctx.Params("game_id")
 	if gameId == "" {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -417,7 +419,7 @@ func (c *gameHandler) GetAllUsersChoiceDivisionsByGameId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *gameHandler) UpdateGamePrizeByGameId(ctx *fiber.Ctx) error {
+func (c *gameController) UpdateGamePrizeByGameId(ctx *fiber.Ctx) error {
 	updateGamePrizeDTO := new(models.UpdateGamePrizeDTO)
 	if err := ctx.BodyParser(updateGamePrizeDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -433,6 +435,52 @@ func (c *gameHandler) UpdateGamePrizeByGameId(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(map[string]interface{}{
 		"message": "updated",
+		"success": true,
+	})
+}
+
+func (c *gameController) GetUserGamesByTimesAndGameTypes(ctx *fiber.Ctx) error {
+	getUserGamesByTimesAndGameTypesDTO := new(models.GetUserGamesByTimesAndGameTypesDTO)
+	if err := ctx.BodyParser(getUserGamesByTimesAndGameTypesDTO); err != nil {
+		fmt.Println(err)
+		return ctx.Status(400).JSON(map[string]interface{}{
+			"message": "wrong body, error code #187",
+			"success": false,
+		})
+	}
+
+	localData := ctx.Locals("user_data")
+	if localData == nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(map[string]interface{}{
+			"message": "internal issue, error code #188",
+			"success": false,
+		})
+	}
+	userData := localData.(models.Token)
+	var gameType *string
+
+	if getUserGamesByTimesAndGameTypesDTO.GameType != nil {
+		gameType = new(string)
+
+		switch *getUserGamesByTimesAndGameTypesDTO.GameType {
+		case 0:
+			*gameType = "lotto"
+		case 1:
+			*gameType = "ozlotto"
+		case 2:
+			*gameType = "powerball"
+		case 3:
+			*gameType = "american_powerball"
+		}
+	}
+
+	res, err := c.gameService.GetUserGamesByTimesAndGameTypes(userData.UserId, gameType, getUserGamesByTimesAndGameTypesDTO.StartTime, getUserGamesByTimesAndGameTypesDTO.EndTime)
+	if err != nil {
+		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
+	}
+
+	return ctx.JSON(map[string]interface{}{
+		"data":    res,
 		"success": true,
 	})
 }

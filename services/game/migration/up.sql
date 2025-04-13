@@ -50,6 +50,7 @@ CREATE TABLE "user_choices"(
     "game_id" VARCHAR(64) NOT NULL, -- Reference to the game being played
     "chosen_main_numbers" INTEGER[][] NOT NULL, -- 2D array for multiple sets of main numbers
     "chosen_bonus_numbers" INTEGER[][], -- 2D array for multiple sets of bonus numbers (if applicable)
+    "bought_price" INTEGER NOT NULL, -- the price the user choices bought with ti
     "created_at" TIMESTAMP NOT NULL, -- Time when the user made the selection
     FOREIGN KEY ("game_id") REFERENCES "games" ("id") ON DELETE CASCADE -- Ensures valid game reference
 );

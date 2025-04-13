@@ -28,11 +28,19 @@ type (
 
 		AdjustUserRank(int32, int32, bool) *types.Error
 
+		GetAllUserRanking(int32) (*models.Ranking, *types.Error)
+
+		SearchUsername(string) ([]models.Profile, *types.Error)
+
+		GetUserLeaderBoard(int32) ([]models.Profile, *types.Error)
+
 		ChangeUserImpression(int32, int32, bool) *types.Error
 
 		CheckUsernameExists(string) *types.Error
 
 		UpdateProfile(int32, string) *types.Error
+
+		ChangeImpressionAndDCoin(int32, int32, int32) *types.Error
 		// IncrementUserScore(int32, float32) *types.Error
 		// DecrementUserScore(int32, float32) *types.Error
 

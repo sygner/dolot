@@ -35,6 +35,7 @@ func (c *ProfileHandler) AddProfile(ctx context.Context, request *pb.AddProfileR
 		UserId:        res.UserId,
 		Score:         res.Score,
 		Impression:    res.Impression,
+		DCoin:         res.DCoin,
 		Rank:          res.Rank,
 		GamesQuantity: res.GamesQuantity,
 		Sid:           res.Sid,
@@ -53,6 +54,7 @@ func (c *ProfileHandler) GetProfileByUsername(ctx context.Context, request *pb.U
 		UserId:        res.UserId,
 		Score:         res.Score,
 		Impression:    res.Impression,
+		DCoin:         res.DCoin,
 		Rank:          res.Rank,
 		GamesQuantity: res.GamesQuantity,
 		WonGames:      res.WonGames,
@@ -73,6 +75,7 @@ func (c *ProfileHandler) GetProfileBySid(ctx context.Context, request *pb.Sid) (
 		UserId:        res.UserId,
 		Score:         res.Score,
 		Impression:    res.Impression,
+		DCoin:         res.DCoin,
 		Rank:          res.Rank,
 		GamesQuantity: res.GamesQuantity,
 		WonGames:      res.WonGames,
@@ -92,6 +95,7 @@ func (c *ProfileHandler) GetProfileByUserId(ctx context.Context, request *pb.Use
 		UserId:        res.UserId,
 		Score:         res.Score,
 		Impression:    res.Impression,
+		DCoin:         res.DCoin,
 		Rank:          res.Rank,
 		GamesQuantity: res.GamesQuantity,
 		WonGames:      res.WonGames,
@@ -161,6 +165,82 @@ func (c *ProfileHandler) CheckUsernameExists(ctx context.Context, request *pb.Us
 
 func (c *ProfileHandler) UpdateProfile(ctx context.Context, request *pb.UpdateProfileRequest) (*pb.Empty, error) {
 	err := c.profileService.UpdateProfile(request.UserId, request.Username)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+	return &pb.Empty{}, nil
+}
+
+func (c *ProfileHandler) GetAllUserRanking(ctx context.Context, request *pb.UserId) (*pb.Ranking, error) {
+	res, err := c.profileService.GetAllUserRanking(request.UserId)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+	return &pb.Ranking{
+		TotalRanking:       res.TotalRanking,
+		IndividualRanking:  res.IndividualRanking,
+		SeasonRanking:      res.SeasonRanking,
+		MonthRanking:       res.MonthRanking,
+		SeasonRankingCount: res.SeasonRankChangesCount,
+		MonthRankingCount:  res.MonthRankChangesCount,
+		TotalRankingCount:  res.AllRankChangesCount,
+	}, nil
+}
+
+func (c *ProfileHandler) SearchUsername(ctx context.Context, request *pb.Username) (*pb.Profiles, error) {
+	res, err := c.profileService.SearchUsername(request.Username)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+	var profiles []*pb.Profile
+	for _, profile := range res {
+		profiles = append(profiles, &pb.Profile{
+			UserId:        profile.UserId,
+			Score:         profile.Score,
+			Impression:    profile.Impression,
+			DCoin:         profile.DCoin,
+			Rank:          profile.Rank,
+			GamesQuantity: profile.GamesQuantity,
+			WonGames:      profile.WonGames,
+			LostGames:     profile.LostGames,
+			Sid:           profile.Sid,
+			Username:      profile.Username,
+			CreatedAt:     fmt.Sprintf("%d", profile.CreatedAt.Unix()),
+			HighestRank:   profile.HighestRank,
+		})
+	}
+
+	return &pb.Profiles{Profiles: profiles}, nil
+}
+
+func (c *ProfileHandler) GetUserLeaderBoard(ctx context.Context, request *pb.UserId) (*pb.Profiles, error) {
+	res, err := c.profileService.GetUserLeaderBoard(request.UserId)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+	var profiles []*pb.Profile
+	for _, profile := range res {
+		profiles = append(profiles, &pb.Profile{
+			UserId:        profile.UserId,
+			Score:         profile.Score,
+			Impression:    profile.Impression,
+			DCoin:         profile.DCoin,
+			Rank:          profile.Rank,
+			GamesQuantity: profile.GamesQuantity,
+			WonGames:      profile.WonGames,
+			LostGames:     profile.LostGames,
+			Sid:           profile.Sid,
+			Username:      profile.Username,
+			CreatedAt:     fmt.Sprintf("%d", profile.CreatedAt.Unix()),
+			HighestRank:   profile.HighestRank,
+		})
+	}
+
+	return &pb.Profiles{Profiles: profiles}, nil
+}
+
+func (c *ProfileHandler) ChangeImpressionAndDCoin(ctx context.Context, request *pb.ChangeImpressionAndDCreditRequest) (*pb.Empty, error) {
+	err := c.profileService.ChangeImpressionAndDCoin(request.UserId, request.Impression, request.DCoin)
 	if err != nil {
 		return nil, err.ErrorToGRPCStatus()
 	}

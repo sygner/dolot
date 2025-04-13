@@ -343,6 +343,7 @@ func (c *gameRepository) GetLottoDivisionUsers(
 						userChoiceDetail: models.UserChoiceResultDetail{
 							UserId:            choice.UserId,
 							ChosenMainNumbers: chosenArray,
+							BoughtPrice:       choice.BoughtPrice,
 							MatchCount:        matchCount,
 						},
 					}
@@ -431,6 +432,7 @@ func (c *gameRepository) GetPowerballDivisionUsersWithBonus(
 										ChosenMainNumbers: chosenMainNumbers,
 										ChosenBonusNumber: chosenBonusNumber,
 										MatchCount:        matchCount,
+										BoughtPrice:       choice.BoughtPrice,
 										HasBonus:          true,
 									},
 								}
@@ -447,6 +449,7 @@ func (c *gameRepository) GetPowerballDivisionUsersWithBonus(
 										ChosenMainNumbers: chosenMainNumbers,
 										ChosenBonusNumber: chosenBonusNumber,
 										MatchCount:        matchCount,
+										BoughtPrice:       choice.BoughtPrice,
 										HasBonus:          false,
 									},
 								}

@@ -46,7 +46,7 @@ func (c *gameRepository) GetGameById(gameId string) (*models.Game, *types.Error)
 
 // GetUserChoicesByGameId retrieves user choices based on the game ID.
 func (c *gameRepository) GetUserChoicesByGameId(gameId string) ([]models.UserChoiceResult, *types.Error) {
-	query := `SELECT user_id, chosen_main_numbers, chosen_bonus_numbers FROM user_choices WHERE game_id = $1`
+	query := `SELECT user_id, chosen_main_numbers, chosen_bonus_numbers, bought_price FROM user_choices WHERE game_id = $1`
 	rows, err := c.db.Query(query, gameId)
 	if err != nil {
 		return nil, types.NewInternalError("internal issue, error code #4015")
@@ -58,7 +58,7 @@ func (c *gameRepository) GetUserChoicesByGameId(gameId string) ([]models.UserCho
 		var choice models.UserChoiceResult
 		var chosenMainNumbers, chosenBonusNumbers []byte
 
-		if err := rows.Scan(&choice.UserId, &chosenMainNumbers, &chosenBonusNumbers); err != nil {
+		if err := rows.Scan(&choice.UserId, &chosenMainNumbers, &chosenBonusNumbers, &choice.BoughtPrice); err != nil {
 			return nil, types.NewInternalError("internal issue, error code #4016")
 		}
 
@@ -82,7 +82,7 @@ func (c *gameRepository) GetUserChoicesByGameId(gameId string) ([]models.UserCho
 }
 
 func (c *gameRepository) GetUserChoicesByGameIdAndUserId(userId int32, gameId string) ([]models.UserChoiceResult, *types.Error) {
-	query := `SELECT user_id, chosen_main_numbers, chosen_bonus_numbers FROM user_choices WHERE user_id = $1 AND game_id = $2`
+	query := `SELECT user_id, chosen_main_numbers, chosen_bonus_numbers, bought_pric FROM user_choices WHERE user_id = $1 AND game_id = $2`
 	rows, err := c.db.Query(query, userId, gameId)
 	if err != nil {
 		return nil, types.NewInternalError("internal issue, error code #4015-1")
@@ -94,7 +94,7 @@ func (c *gameRepository) GetUserChoicesByGameIdAndUserId(userId int32, gameId st
 		var choice models.UserChoiceResult
 		var chosenMainNumbers, chosenBonusNumbers []byte
 
-		if err := rows.Scan(&choice.UserId, &chosenMainNumbers, &chosenBonusNumbers); err != nil {
+		if err := rows.Scan(&choice.UserId, &chosenMainNumbers, &chosenBonusNumbers, &choice.BoughtPrice); err != nil {
 			return nil, types.NewInternalError("internal issue, error code #4016-1")
 		}
 
@@ -427,8 +427,8 @@ func parseNumbers(numbersString string) []int32 {
 
 // AddUserChoice adds a user's choice to the database.
 func (c *gameRepository) AddUserChoice(data *models.AddUserChoiceDTO) *types.Error {
-	query := `INSERT INTO user_choices (id, user_id, game_id, chosen_main_numbers, chosen_bonus_numbers, created_at) VALUES ($1, $2, $3, $4, $5, NOW())`
-	if _, err := c.db.Exec(query, data.Id, data.UserId, data.GameId, pq.Array(data.ChosenMainNumbers), pq.Array(data.ChosenBonusNumbers)); err != nil {
+	query := `INSERT INTO user_choices (id, user_id, game_id, chosen_main_numbers, chosen_bonus_numbers, bought_price, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`
+	if _, err := c.db.Exec(query, data.Id, data.UserId, data.GameId, pq.Array(data.ChosenMainNumbers), pq.Array(data.ChosenBonusNumbers), data.BoughtPrice); err != nil {
 		return types.NewInternalError("failed to add the user choice, error code #4021")
 	}
 	return nil

@@ -5,6 +5,7 @@ package game;
 option go_package = "./";
 
 
+
 message Empty{}
 
 
@@ -18,17 +19,17 @@ message Pagination {
     bool get_total = 3;
 }
 
-message GameTypeRequest{
-    GameType game_type = 1;
-    int32 limit = 2;
-}
-
 // Enum for GameType
 enum GameType {
     LOTTO = 0;
     OZLOTTO = 1;
     POWERBALL = 2;
     AMERICAN_POWERBALL = 3;
+}
+
+message GameTypeRequest{
+    GameType game_type = 1;
+    int32 limit = 2;
 }
 
 
@@ -38,8 +39,9 @@ message UserId{
 
 message UserChoiceResult{
     int32 user_id = 1;
-    repeated int32 choses_numbers = 2;
+    repeated  int32 choses_numbers = 2;
     repeated int32 chosen_bonus_number = 3;
+    float bought_price = 6;
     repeated int32 match_count = 4;
 }
 
@@ -48,6 +50,8 @@ message UserChoiceResultDetail{
     repeated int32 ChosenMainNumber = 2;
     int32 chosen_bonus_number = 3;
     int32 match_count = 4;
+    float bought_price = 5;
+    optional float won_prize = 6 ;
 
 }
 
@@ -72,3 +76,4 @@ message DivisionResultCount{
 message DivisionResultsCount{
     repeated DivisionResultCount division_results_count = 1;
 }
+

@@ -15,3 +15,8 @@ type AddProfileDTO struct {
 type UpdateProfileDTO struct {
 	Username string `json:"username"`
 }
+
+type ImpressionExchangeDTO struct {
+	Impression uint32 `json:"impression"`
+	ToCoin     bool   `json:"to_coin"`
+}

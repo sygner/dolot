@@ -47,6 +47,7 @@ func toUserChoiceResultDetailProto(res *models.UserChoiceResultDetail) *pb.UserC
 		UserId:            res.UserId,
 		ChosenMainNumber:  res.ChosenMainNumbers,
 		ChosenBonusNumber: res.ChosenBonusNumber,
+		BoughtPrice:       float32(res.BoughtPrice),
 		MatchCount:        res.MatchCount,
 	}
 }
@@ -108,6 +109,7 @@ func toUserChoiceProto(res *models.UserChoice) *pb.UserChoice {
 		GameId:             res.GameId,
 		ChosenMainNumbers:  outMainNumbers,
 		ChosenBonusNumbers: outBonusNumbers,
+		BoughtPrice:        float32(res.BoughtPrice),
 		CreatedAt:          res.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 }

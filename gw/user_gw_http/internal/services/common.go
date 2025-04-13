@@ -41,6 +41,7 @@ func toUserChoiceResultDetailProto(res *game_pb.UserChoiceResultDetail) models.U
 		UserId:            res.UserId,
 		ChosenMainNumbers: res.ChosenMainNumber,
 		ChosenBonusNumber: res.ChosenBonusNumber,
+		BoughtPrice:       res.BoughtPrice,
 		MatchCount:        res.MatchCount,
 	}
 }
@@ -142,7 +143,7 @@ func toTransactionProto(res *wallet_pb.Transaction) (*models.Transaction, *types
 	}, nil
 }
 
-func toTransactionsProto(res *wallet_pb.Transactions) ([]models.Transaction, *types.Error) {
+func toTransactionsProto(res *wallet_pb.Transactions) (*models.Transactions, *types.Error) {
 	transactions := make([]models.Transaction, 0)
 	for _, transaction := range res.Transactions {
 		t, err := toTransactionProto(transaction)
@@ -151,7 +152,8 @@ func toTransactionsProto(res *wallet_pb.Transactions) ([]models.Transaction, *ty
 		}
 		transactions = append(transactions, *t)
 	}
-	return transactions, nil
+
+	return &models.Transactions{Transactions: transactions, Total: res.Total}, nil
 }
 
 func toGameProto(res *game_pb.Game) (*models.Game, *types.Error) {
@@ -210,6 +212,7 @@ func toUserChoiceProto(res *game_pb.UserChoice) *models.UserChoice {
 		GameId:             res.GameId,
 		ChosenMainNumbers:  outMainNumbers,
 		ChosenBonusNumbers: outBonusNumbers,
+		BoughtPrice:        res.BoughtPrice,
 		CreatedAt:          res.CreatedAt,
 	}
 }
@@ -219,10 +222,12 @@ func toProfileProto(res *profile_pb.Profile) (*models.Profile, *types.Error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Profile ", res)
 	return &models.Profile{
 		UserId:        res.UserId,
 		Score:         res.Score,
 		Impression:    res.Impression,
+		DCoin:         res.DCoin,
 		Rank:          res.Rank,
 		GamesQuantity: res.GamesQuantity,
 		WonGames:      res.WonGames,

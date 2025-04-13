@@ -1,10 +1,12 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"dolott_game/internal/models"
 	"dolott_game/internal/types"
 	"fmt"
+	"time"
 )
 
 func (c *gameRepository) GetGameByGameId(gameId string) (*models.Game, *types.Error) {
@@ -187,7 +189,6 @@ func (c *gameRepository) GetAllGamesCount() (int32, *types.Error) {
 	var totalCount int32
 	err := c.db.QueryRow(query).Scan(&totalCount)
 	if err != nil {
-		fmt.Println(err)
 		return 0, types.NewInternalError("internal issue, error code #4040")
 	}
 	return totalCount, nil
@@ -242,7 +243,6 @@ func (c *gameRepository) GetGameTypes() ([]models.GameTypeDetail, *types.Error) 
 
 	rows, err := c.db.Query(query)
 	if err != nil {
-		fmt.Println(err)
 		if err == sql.ErrNoRows {
 			return nil, types.NewNotFoundError("no game types found, error code #4013")
 		}
@@ -328,7 +328,6 @@ func (c *gameRepository) UpdateGameTypeDetail(gameType int32, dayName *string, p
 
 	_, err := c.db.Exec(query, autoCompute, prizeReward, tokenBurn, dayName, gameType)
 	if err != nil {
-		fmt.Println(err)
 		return types.NewInternalError("failed to update game detail, error code #4045")
 	}
 	return nil
@@ -490,4 +489,143 @@ WHERE uc.user_id = $1
 		return 0, types.NewInternalError("internal issue, error code #4048")
 	}
 	return totalCount, nil
+}
+
+func (c *gameRepository) GetUserGamesByTimesAndGameType(userId int32, startTime, endTime time.Time, gameType *string) ([]models.GameAndUserChoice, *types.Error) {
+	ctx := context.Background()
+
+	query := `
+SELECT 
+    g.id, g.name, g.game_type, g.num_main_numbers, g.num_bonus_numbers, 
+    g.main_number_range, g.bonus_number_range, g.start_time, g.end_time, 
+    g.creator_id, g.result, g.prize, g.auto_compute_prize, g.created_at,
+    array_length(uc.chosen_main_numbers, 1) AS chosen_main_numbers_length
+FROM games AS g
+INNER JOIN user_choices uc 
+    ON uc.game_id = g.id 
+WHERE uc.user_id = $1  
+AND g.start_time >= $2
+AND g.end_time <= $3
+`
+
+	args := []interface{}{userId, startTime, endTime}
+
+	if gameType != nil {
+		query += " AND g.game_type = $4"
+		args = append(args, *gameType)
+	}
+
+	query += ` 
+	GROUP BY g.id, g.name, g.game_type, g.num_main_numbers, g.num_bonus_numbers, 
+	         g.main_number_range, g.bonus_number_range, g.start_time, g.end_time, 
+	         g.creator_id, g.result, g.prize, g.auto_compute_prize, g.created_at, 
+	         uc.chosen_main_numbers
+	ORDER BY g.created_at DESC`
+
+	rows, err := c.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, types.NewNotFoundError("game not found, error code #4038")
+		}
+		return nil, types.NewInternalError("failed to fetch the games, error code #4039")
+	}
+	defer rows.Close()
+
+	var games []models.GameAndUserChoice
+
+	for rows.Next() {
+		var game models.Game
+		var chosenMainNumbersLength int32
+
+		if err := rows.Scan(
+			&game.Id, &game.Name, &game.GameType, &game.NumMainNumbers,
+			&game.NumBonusNumbers, &game.MainNumberRange, &game.BonusNumberRange,
+			&game.StartTime, &game.EndTime, &game.CreatorId, &game.Result, &game.Prize,
+			&game.AutoCompute, &game.CreatedAt, &chosenMainNumbersLength,
+		); err != nil {
+			return nil, types.NewInternalError("error scanning games, error code #4040")
+		}
+
+		game.NumMainNumbers = chosenMainNumbersLength
+
+		userChoicesResult, rerr := c.GetUserChoicesByGameId(game.Id)
+		if rerr != nil {
+			return nil, rerr
+		}
+
+		ticketUsed := 0
+		var userChoices []models.UserChoiceResult
+		for _, uc := range userChoicesResult {
+			userChoices = append(userChoices, models.UserChoiceResult{
+				UserId:            userId,
+				ChosenNumbers:     uc.ChosenNumbers,
+				ChosenBonusNumber: uc.ChosenBonusNumber,
+				BoughtPrice:       uc.BoughtPrice,
+			})
+			ticketUsed += len(uc.ChosenNumbers)
+		}
+
+		gameAndChoice := models.GameAndUserChoice{
+			Game:       game,
+			UserChoice: userChoices,
+			TicketUsed: uint32(ticketUsed),
+		}
+
+		// Check for user wins only if the game has a result
+		if game.Result != nil {
+			winners, err := c.GetWinnersByGameId(game.Id)
+			if err != nil && err.Code != 404 {
+				return nil, err
+			}
+
+			if err == nil && winners != nil {
+				divisionDetails := make([]models.DivisionDetail, 0)
+				var userDivisions []models.DivisionResult
+
+				for _, division := range winners.Divisions {
+					divisionDetail := models.DivisionDetail{
+						Division: division.Division,
+					}
+
+					distinctUsers := make(map[int32]struct{})
+					prizePerDivision := float32(0)
+
+					for _, userChoice := range division.UserChoices {
+						if userChoice.WonPrize != nil {
+							prizePerDivision += *userChoice.WonPrize
+						}
+						distinctUsers[userChoice.UserId] = struct{}{}
+
+						if userChoice.UserId == userId {
+							userDivisions = append(userDivisions, models.DivisionResult{
+								Division:    division.Division,
+								MatchCount:  userChoice.MatchCount,
+								HasBonus:    userChoice.HasBonus,
+								WonPrize:    userChoice.WonPrize,
+								UserChoices: []models.UserChoiceResultDetail{userChoice},
+							})
+						}
+					}
+
+					divisionDetail.DivisionPrize = prizePerDivision
+					divisionDetail.UserCount = uint32(len(distinctUsers))
+					divisionDetails = append(divisionDetails, divisionDetail)
+				}
+
+				// Only add divisions if user won something
+				if len(userDivisions) > 0 {
+					gameAndChoice.DivisionResult = userDivisions
+					gameAndChoice.DivisionDetails = divisionDetails
+				}
+			}
+		}
+
+		games = append(games, gameAndChoice)
+	}
+
+	if len(games) == 0 {
+		return nil, types.NewNotFoundError("no games found, error code #4038")
+	}
+
+	return games, nil
 }

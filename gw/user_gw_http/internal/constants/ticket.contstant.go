@@ -8,11 +8,9 @@ import (
 	"time"
 )
 
-const TICKET_BUY_RATE float64 = 1.0
-
-const MAIN_LUNC_WALLET_ADDRESS = "terra1jqt929u9tp2q6s9a79k9jx3zxec097z759e267"
-const MAIN_LUNC_USER_WALLET_ID = 0
-const MAIN_LUNC_WALLET_ID = 0
+var MAIN_LUNC_WALLET_ADDRESS = "terra1jqt929u9tp2q6s9a79k9jx3zxec097z759e267"
+var MAIN_LUNC_USER_WALLET_ID int32 = 0
+var MAIN_LUNC_WALLET_ID int32 = 0
 
 type CoinPaprikaResponse struct {
 	ID     string `json:"id"`
@@ -45,6 +43,7 @@ func GetLUNCPriceCoinPaprika() (float64, *types.Error) {
 		return 0, types.NewInternalError(fmt.Sprintf("failed to decode CoinPaprika response: %v", err))
 	}
 
+	fmt.Println(cpResp)
 	return cpResp.Quotes.USD.Price, nil
 }
 

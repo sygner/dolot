@@ -125,4 +125,11 @@ export class WalletRepository extends Repository {
         const result = await this.executeQuery(query, values);
         return result.rows;
     }
+
+    public async makeTheMainAccountIndexToZero():Promise<boolean>{
+        const query = `UPDATE wallets SET id = '0' WHERE  user_id = 0`
+        await this.executeQuery(query, [])
+        return true
+    }
+    
 }

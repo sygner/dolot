@@ -18,7 +18,7 @@ export class TransactionRepository extends Repository {
     }
 
     public async getTransactionsByWalletId(walletId: number): Promise<Array<Transaction>> {
-        const query = `SELECT * FROM transactions WHERE from_wallet_id = $1`;
+        const query = `SELECT * FROM transactions WHERE from_wallet_id = $1 ORDER BY transaction_at DESC`;
         const values = [walletId];
         const result = await this.executeQuery(query, values);
         return result.rows;
@@ -26,10 +26,25 @@ export class TransactionRepository extends Repository {
 
     public async getTransactionsByWalletIdAndUserId(walletId: number, userId: number): Promise<Array<Transaction>> {
         console.log(walletId,userId)
-        const query = `SELECT * FROM transactions WHERE from_wallet_id = $1 AND EXISTS (SELECT 1 FROM wallets WHERE user_id = $2)`;
+        const query = `SELECT * FROM transactions WHERE from_wallet_id = $1 AND EXISTS (SELECT 1 FROM wallets WHERE user_id = $2) ORDER BY transaction_at DESC`;
         const values = [walletId, userId];
         const result = await this.executeQuery(query, values);
         return result.rows;
+    }
+
+    public async getTransactionsByWalletIdAndUserIdAndPagination(walletId: number, userId: number, limit: number, offset: number): Promise<Array<Transaction>> {
+        const query = `SELECT * FROM transactions WHERE from_wallet_id = $1 AND EXISTS (SELECT 1 FROM wallets WHERE user_id = $2) ORDER BY transaction_at DESC LIMIT $3 OFFSET $4`;
+        const values = [walletId, userId, limit, offset];
+        const result = await this.executeQuery(query, values);
+        return result.rows;
+    }
+    
+    public async getTransactionsByWalletIdAndUserIdAndPaginationCount(walletId: number, userId: number): Promise<number> {
+        const query = `SELECT COUNT(*) FROM transactions WHERE from_wallet_id = $1 AND EXISTS (SELECT 1 FROM wallets WHERE user_id = $2)`;
+        const values = [walletId, userId];
+        const result = await this.executeQuery(query, values);
+
+        return parseInt(result.rows[0].count);
     }
 
     public async getTransactionsByUserId(userId: number): Promise<Array<Transaction>> {
@@ -37,6 +52,20 @@ export class TransactionRepository extends Repository {
         const values = [userId];
         const result = await this.executeQuery(query, values);
         return result.rows;
+    }
+
+    public async getTransactionsByUserIdAndPagination(userId: number, limit: number, offset: number): Promise<Array<Transaction>> {
+        const query = `SELECT * FROM transactions WHERE from_wallet_id IN (SELECT id FROM wallets WHERE user_id = $1) ORDER BY transaction_at DESC LIMIT $2 OFFSET $3`;
+        const values = [userId, limit, offset];
+        const result = await this.executeQuery(query, values);
+        return result.rows;
+    }
+
+    public async getTransactionsByUserIdAndPaginationCount(userId: number): Promise<number> {
+        const query = `SELECT COUNT(*) FROM transactions WHERE from_wallet_id IN (SELECT id FROM wallets WHERE user_id = $1)`;
+        const values = [userId];
+        const result = await this.executeQuery(query, values);
+        return parseInt(result.rows[0].count);
     }
 
     public async createTransaction(transaction: Transaction): Promise<Transaction> {

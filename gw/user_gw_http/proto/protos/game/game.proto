@@ -4,9 +4,8 @@ package game;
 
 option go_package = "./";
 
-
 import "proto/protos/game/common.proto";
-
+import "proto/protos/game/user.proto";
 
 service GameService{
     rpc GetGameByGameId(GameId) returns (Game);
@@ -26,6 +25,15 @@ service GameService{
     rpc GetAllUserChoiceDivisionsByGameId(GetAllUserChoiceDivisionsByGameIdRequest) returns (DivisionResults);
     rpc GetAllUsersChoiceDivisionsByGameId(GameId) returns (DivisionResults);
     rpc UpdateGamePrizeByGameId(UpdateGamePrizeByGameIdRequest) returns (Empty);
+    rpc GetUserGamesByTimesAndGameTypes(GetUserGamesByTimesAndGameTypesRequest) returns (GamesAndUserChoices);
+    rpc UpdateUserGameDivisionPrize(UpdateUserGameDivisionPrizeRequest) returns (Empty);
+}
+
+message GetUserGamesByTimesAndGameTypesRequest{
+    optional string game_type = 1;
+    int32 user_id = 2;
+    string start_time = 3;
+    string end_time = 4;
 }
 
 message UpdateGamePrizeByGameIdRequest{
@@ -91,6 +99,7 @@ message GetGamesByCreatorIdRequest{
     Pagination pagination = 2;
 }
 
+
 message AddGameRequest{
     string name = 1;                        // Name of the game
     GameType game_type = 2;  
@@ -101,9 +110,6 @@ message AddGameRequest{
     bool auto_compute = 7; // Auto Compute for Prize 
 }
 
-
-
-// Message for Game
 message Game {
     string id = 1;                          // Unique identifier for the game
     string name = 2;                        // Name of the game
@@ -125,3 +131,40 @@ message Games{
     repeated Game games = 1;
     optional int32 total = 2;
 }
+
+message DivisionDetail {
+    string division = 1;
+    uint32 user_count = 2;
+    float division_prize = 3;
+}
+
+message GameAndUserChoice{
+    Game game = 1;
+    DivisionResults division_results = 2;
+    repeated UserChoiceResultFiltered user_choices = 3; 
+    uint32 ticket_used = 4;
+    repeated DivisionDetail division_details  =5;
+}
+
+message GamesAndUserChoices{
+    repeated GameAndUserChoice games = 1;
+}
+
+
+message UserPrizeUpdate{
+    int32 user_id = 1;
+    float won_prize = 2;
+}
+
+message DivisionUpdate{
+
+    string division_name = 1;
+    repeated UserPrizeUpdate users = 2;
+}
+
+
+message UpdateUserGameDivisionPrizeRequest{
+    repeated DivisionUpdate division_updates = 1;
+    string game_id = 2;
+}
+

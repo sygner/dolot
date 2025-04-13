@@ -147,6 +147,17 @@ function deserialize_wallet_GetWalletsByUserIdsAndCoinIdRequest(buffer_arg) {
   return service_pb.GetWalletsByUserIdsAndCoinIdRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_wallet_PreTransactionDetail(arg) {
+  if (!(arg instanceof service_pb.PreTransactionDetail)) {
+    throw new Error('Expected argument of type wallet.PreTransactionDetail');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_wallet_PreTransactionDetail(buffer_arg) {
+  return service_pb.PreTransactionDetail.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_wallet_Sid(arg) {
   if (!(arg instanceof service_pb.Sid)) {
     throw new Error('Expected argument of type wallet.Sid');
@@ -233,6 +244,28 @@ function serialize_wallet_Wallets(arg) {
 
 function deserialize_wallet_Wallets(buffer_arg) {
   return service_pb.Wallets.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_wallet_getTransactionsByUserIdAndPaginationRequest(arg) {
+  if (!(arg instanceof service_pb.getTransactionsByUserIdAndPaginationRequest)) {
+    throw new Error('Expected argument of type wallet.getTransactionsByUserIdAndPaginationRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_wallet_getTransactionsByUserIdAndPaginationRequest(buffer_arg) {
+  return service_pb.getTransactionsByUserIdAndPaginationRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_wallet_getTransactionsByWalletIdAndUserIdAndPaginationRequest(arg) {
+  if (!(arg instanceof service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest)) {
+    throw new Error('Expected argument of type wallet.getTransactionsByWalletIdAndUserIdAndPaginationRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_wallet_getTransactionsByWalletIdAndUserIdAndPaginationRequest(buffer_arg) {
+  return service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 
@@ -434,6 +467,39 @@ var WalletServiceService = exports.WalletServiceService = {
     requestDeserialize: deserialize_wallet_GetWalletsByUserIdsAndCoinIdRequest,
     responseSerialize: serialize_wallet_Wallets,
     responseDeserialize: deserialize_wallet_Wallets,
+  },
+  getPreTransactionDetail: {
+    path: '/wallet.WalletService/GetPreTransactionDetail',
+    requestStream: false,
+    responseStream: false,
+    requestType: service_pb.AddTransactionRequest,
+    responseType: service_pb.PreTransactionDetail,
+    requestSerialize: serialize_wallet_AddTransactionRequest,
+    requestDeserialize: deserialize_wallet_AddTransactionRequest,
+    responseSerialize: serialize_wallet_PreTransactionDetail,
+    responseDeserialize: deserialize_wallet_PreTransactionDetail,
+  },
+  getTransactionsByWalletIdAndUserIdAndPagination: {
+    path: '/wallet.WalletService/getTransactionsByWalletIdAndUserIdAndPagination',
+    requestStream: false,
+    responseStream: false,
+    requestType: service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest,
+    responseType: service_pb.Transactions,
+    requestSerialize: serialize_wallet_getTransactionsByWalletIdAndUserIdAndPaginationRequest,
+    requestDeserialize: deserialize_wallet_getTransactionsByWalletIdAndUserIdAndPaginationRequest,
+    responseSerialize: serialize_wallet_Transactions,
+    responseDeserialize: deserialize_wallet_Transactions,
+  },
+  getTransactionsByUserIdAndPagination: {
+    path: '/wallet.WalletService/getTransactionsByUserIdAndPagination',
+    requestStream: false,
+    responseStream: false,
+    requestType: service_pb.getTransactionsByUserIdAndPaginationRequest,
+    responseType: service_pb.Transactions,
+    requestSerialize: serialize_wallet_getTransactionsByUserIdAndPaginationRequest,
+    requestDeserialize: deserialize_wallet_getTransactionsByUserIdAndPaginationRequest,
+    responseSerialize: serialize_wallet_Transactions,
+    responseDeserialize: deserialize_wallet_Transactions,
   },
 };
 

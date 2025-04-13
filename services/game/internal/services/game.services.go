@@ -27,6 +27,8 @@ type (
 		GetAllUsersChoiceDivisionsByGameId(string) (*models.Winners, *types.Error)
 		UpdateGamePrizeByGameId(string, *uint32, bool) *types.Error
 		GetAllUserPreviousGamesByGameType(int32, string, *models.Pagination) (*models.Games, *types.Error)
+		GetUserGamesByTimesAndGameType(int32, time.Time, time.Time, *string) ([]models.GameAndUserChoice, *types.Error)
+		UpdateWonPrizeForUsers(string, []models.DivisionUpdate) *types.Error
 	}
 	gameServices struct {
 		repository repository.GameRepository
@@ -358,4 +360,12 @@ func (c *gameServices) GetAllUsersChoiceDivisionsByGameId(gameId string) (*model
 
 func (c *gameServices) UpdateGamePrizeByGameId(gameId string, prize *uint32, autoCompute bool) *types.Error {
 	return c.repository.UpdateGamePrizeByGameId(gameId, prize, autoCompute)
+}
+
+func (c *gameServices) GetUserGamesByTimesAndGameType(userId int32, start time.Time, end time.Time, gameType *string) ([]models.GameAndUserChoice, *types.Error) {
+	return c.repository.GetUserGamesByTimesAndGameType(userId, start, end, gameType)
+}
+
+func (c *gameServices) UpdateWonPrizeForUsers(gameId string, divisions []models.DivisionUpdate) *types.Error {
+	return c.repository.UpdateWonPrizeForUsers(gameId, divisions)
 }

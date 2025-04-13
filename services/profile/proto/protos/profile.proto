@@ -17,6 +17,25 @@ service ProfileService{
     rpc ChangeUserImpression(ChangeImpressionRequest) returns (Empty);
     rpc CheckUsernameExists(Username) returns (Empty);
     rpc UpdateProfile(UpdateProfileRequest) returns (Empty);
+    rpc GetAllUserRanking(UserId) returns (Ranking);
+    rpc SearchUsername(Username) returns (Profiles);
+    rpc GetUserLeaderBoard(UserId) returns (Profiles);
+    rpc ChangeImpressionAndDCoin(ChangeImpressionAndDCreditRequest) returns (Empty);
+}
+
+message ChangeImpressionAndDCreditRequest{
+    int32 user_id = 1;
+    int32 impression = 2;
+    int32 d_coin = 3;
+}
+message Ranking{
+    uint32 total_ranking = 1;
+    uint32 individual_ranking = 2;
+    uint32 season_ranking = 3;
+    uint32 month_ranking = 4;
+    uint32 season_ranking_count = 5;
+    uint32 month_ranking_count = 6;
+    uint32 total_ranking_count = 7;
 }
 
 message Empty{}
@@ -61,14 +80,18 @@ message Profile {
     string username = 3;
     float score = 4;
     int32 impression = 5;
-    int32 rank = 6;
-    int32 games_quantity = 7;
-    int32 won_games = 8;
-    int32 lost_games = 9;
-    string created_at = 10;
-    int32 highest_rank = 11;
+    int32 d_coin = 6;
+    int32 rank = 7;
+    int32 games_quantity = 8;
+    int32 won_games = 9;
+    int32 lost_games = 10;
+    string created_at = 11;
+    int32 highest_rank = 12;
 }
 
+message Profiles{
+    repeated Profile profiles = 1;
+}
 
 message Username{
     string username = 1;

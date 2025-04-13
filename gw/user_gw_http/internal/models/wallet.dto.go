@@ -17,3 +17,8 @@ type GetBalanceByCoinIdAndUserIdDTO struct {
 	UserId int32 `json:"user_id"`
 	CoinId int32 `json:"coin_id"`
 }
+
+type GetTransactionsByUserIdAndPaginationDTO struct {
+	WalletId   *int32      `json:"wallet_id,omitempty"`
+	Pagination *Pagination `json:"pagination"`
+}

@@ -26,6 +26,9 @@ interface IWalletServiceService extends grpc.ServiceDefinition<grpc.UntypedServi
     addTransaction: IWalletServiceService_IAddTransaction;
     getTransactionsByUserId: IWalletServiceService_IGetTransactionsByUserId;
     getWalletsByUserIdsAndCoinId: IWalletServiceService_IGetWalletsByUserIdsAndCoinId;
+    getPreTransactionDetail: IWalletServiceService_IGetPreTransactionDetail;
+    getTransactionsByWalletIdAndUserIdAndPagination: IWalletServiceService_IgetTransactionsByWalletIdAndUserIdAndPagination;
+    getTransactionsByUserIdAndPagination: IWalletServiceService_IgetTransactionsByUserIdAndPagination;
 }
 
 interface IWalletServiceService_IGetAllCoins extends grpc.MethodDefinition<service_pb.Empty, service_pb.Coins> {
@@ -190,6 +193,33 @@ interface IWalletServiceService_IGetWalletsByUserIdsAndCoinId extends grpc.Metho
     responseSerialize: grpc.serialize<service_pb.Wallets>;
     responseDeserialize: grpc.deserialize<service_pb.Wallets>;
 }
+interface IWalletServiceService_IGetPreTransactionDetail extends grpc.MethodDefinition<service_pb.AddTransactionRequest, service_pb.PreTransactionDetail> {
+    path: "/wallet.WalletService/GetPreTransactionDetail";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<service_pb.AddTransactionRequest>;
+    requestDeserialize: grpc.deserialize<service_pb.AddTransactionRequest>;
+    responseSerialize: grpc.serialize<service_pb.PreTransactionDetail>;
+    responseDeserialize: grpc.deserialize<service_pb.PreTransactionDetail>;
+}
+interface IWalletServiceService_IgetTransactionsByWalletIdAndUserIdAndPagination extends grpc.MethodDefinition<service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, service_pb.Transactions> {
+    path: "/wallet.WalletService/getTransactionsByWalletIdAndUserIdAndPagination";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest>;
+    requestDeserialize: grpc.deserialize<service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest>;
+    responseSerialize: grpc.serialize<service_pb.Transactions>;
+    responseDeserialize: grpc.deserialize<service_pb.Transactions>;
+}
+interface IWalletServiceService_IgetTransactionsByUserIdAndPagination extends grpc.MethodDefinition<service_pb.getTransactionsByUserIdAndPaginationRequest, service_pb.Transactions> {
+    path: "/wallet.WalletService/getTransactionsByUserIdAndPagination";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<service_pb.getTransactionsByUserIdAndPaginationRequest>;
+    requestDeserialize: grpc.deserialize<service_pb.getTransactionsByUserIdAndPaginationRequest>;
+    responseSerialize: grpc.serialize<service_pb.Transactions>;
+    responseDeserialize: grpc.deserialize<service_pb.Transactions>;
+}
 
 export const WalletServiceService: IWalletServiceService;
 
@@ -212,6 +242,9 @@ export interface IWalletServiceServer {
     addTransaction: grpc.handleUnaryCall<service_pb.AddTransactionRequest, service_pb.Transaction>;
     getTransactionsByUserId: grpc.handleUnaryCall<service_pb.UserId, service_pb.Transactions>;
     getWalletsByUserIdsAndCoinId: grpc.handleUnaryCall<service_pb.GetWalletsByUserIdsAndCoinIdRequest, service_pb.Wallets>;
+    getPreTransactionDetail: grpc.handleUnaryCall<service_pb.AddTransactionRequest, service_pb.PreTransactionDetail>;
+    getTransactionsByWalletIdAndUserIdAndPagination: grpc.handleUnaryCall<service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, service_pb.Transactions>;
+    getTransactionsByUserIdAndPagination: grpc.handleUnaryCall<service_pb.getTransactionsByUserIdAndPaginationRequest, service_pb.Transactions>;
 }
 
 export interface IWalletServiceClient {
@@ -269,6 +302,15 @@ export interface IWalletServiceClient {
     getWalletsByUserIdsAndCoinId(request: service_pb.GetWalletsByUserIdsAndCoinIdRequest, callback: (error: grpc.ServiceError | null, response: service_pb.Wallets) => void): grpc.ClientUnaryCall;
     getWalletsByUserIdsAndCoinId(request: service_pb.GetWalletsByUserIdsAndCoinIdRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.Wallets) => void): grpc.ClientUnaryCall;
     getWalletsByUserIdsAndCoinId(request: service_pb.GetWalletsByUserIdsAndCoinIdRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.Wallets) => void): grpc.ClientUnaryCall;
+    getPreTransactionDetail(request: service_pb.AddTransactionRequest, callback: (error: grpc.ServiceError | null, response: service_pb.PreTransactionDetail) => void): grpc.ClientUnaryCall;
+    getPreTransactionDetail(request: service_pb.AddTransactionRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.PreTransactionDetail) => void): grpc.ClientUnaryCall;
+    getPreTransactionDetail(request: service_pb.AddTransactionRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.PreTransactionDetail) => void): grpc.ClientUnaryCall;
+    getTransactionsByWalletIdAndUserIdAndPagination(request: service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    getTransactionsByWalletIdAndUserIdAndPagination(request: service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    getTransactionsByWalletIdAndUserIdAndPagination(request: service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    getTransactionsByUserIdAndPagination(request: service_pb.getTransactionsByUserIdAndPaginationRequest, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    getTransactionsByUserIdAndPagination(request: service_pb.getTransactionsByUserIdAndPaginationRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    getTransactionsByUserIdAndPagination(request: service_pb.getTransactionsByUserIdAndPaginationRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
 }
 
 export class WalletServiceClient extends grpc.Client implements IWalletServiceClient {
@@ -327,4 +369,13 @@ export class WalletServiceClient extends grpc.Client implements IWalletServiceCl
     public getWalletsByUserIdsAndCoinId(request: service_pb.GetWalletsByUserIdsAndCoinIdRequest, callback: (error: grpc.ServiceError | null, response: service_pb.Wallets) => void): grpc.ClientUnaryCall;
     public getWalletsByUserIdsAndCoinId(request: service_pb.GetWalletsByUserIdsAndCoinIdRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.Wallets) => void): grpc.ClientUnaryCall;
     public getWalletsByUserIdsAndCoinId(request: service_pb.GetWalletsByUserIdsAndCoinIdRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.Wallets) => void): grpc.ClientUnaryCall;
+    public getPreTransactionDetail(request: service_pb.AddTransactionRequest, callback: (error: grpc.ServiceError | null, response: service_pb.PreTransactionDetail) => void): grpc.ClientUnaryCall;
+    public getPreTransactionDetail(request: service_pb.AddTransactionRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.PreTransactionDetail) => void): grpc.ClientUnaryCall;
+    public getPreTransactionDetail(request: service_pb.AddTransactionRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.PreTransactionDetail) => void): grpc.ClientUnaryCall;
+    public getTransactionsByWalletIdAndUserIdAndPagination(request: service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    public getTransactionsByWalletIdAndUserIdAndPagination(request: service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    public getTransactionsByWalletIdAndUserIdAndPagination(request: service_pb.getTransactionsByWalletIdAndUserIdAndPaginationRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    public getTransactionsByUserIdAndPagination(request: service_pb.getTransactionsByUserIdAndPaginationRequest, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    public getTransactionsByUserIdAndPagination(request: service_pb.getTransactionsByUserIdAndPaginationRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
+    public getTransactionsByUserIdAndPagination(request: service_pb.getTransactionsByUserIdAndPaginationRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: service_pb.Transactions) => void): grpc.ClientUnaryCall;
 }

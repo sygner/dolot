@@ -34,6 +34,13 @@ type (
 
 		UpdateProfile(int32, string) *types.Error
 
+		GetAllUserRanking(int32) (*models.Ranking, *types.Error)
+
+		SearchUsername(string) ([]models.Profile, *types.Error)
+
+		GetUserLeaderBoard(int32) ([]models.Profile, *types.Error)
+
+		ChangeImpressionAndDCoin(int32, int32, int32) *types.Error
 		// 	IncrementScoreByUserId(int32, float32) *types.Error
 		// 	DecrementScoreByUserId(int32, float32) *types.Error
 
@@ -173,6 +180,22 @@ func (c *profileService) UpdateProfile(userId int32, username string) *types.Err
 		return types.NewAlreadyExistsError("this username already exists #3101")
 	}
 	return c.repository.UpdateProfile(userId, username)
+}
+
+func (c *profileService) GetAllUserRanking(userId int32) (*models.Ranking, *types.Error) {
+	return c.repository.GetAllUserRanking(userId)
+}
+
+func (c *profileService) SearchUsername(username string) ([]models.Profile, *types.Error) {
+	return c.repository.SearchUsername(username)
+}
+
+func (c *profileService) GetUserLeaderBoard(userId int32) ([]models.Profile, *types.Error) {
+	return c.repository.GetUserLeaderBoard(userId)
+}
+
+func (c *profileService) ChangeImpressionAndDCoin(userId int32, impression int32, dCredit int32) *types.Error {
+	return c.repository.ChangeImpressionAndDCoin(userId, impression, dCredit)
 }
 
 // func (c *profileService) IncrementScoreByUserId(userId int32, score float32) *types.Error {

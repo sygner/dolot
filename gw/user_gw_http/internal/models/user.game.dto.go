@@ -5,7 +5,8 @@ type AddUserChoiceDTO struct {
 	GameId             string    `json:"game_id"`
 	ChosenMainNumbers  [][]int32 `json:"chosen_main_numbers"`
 	ChosenBonusNumbers [][]int32 `json:"chosen_bonus_numbers"`
-	ShouldReturn       bool      `json:"should_return"`
+	BoughtPrice        int32
+	ShouldReturn       bool `json:"should_return"`
 }
 
 type AddUserChoicesDTO struct {

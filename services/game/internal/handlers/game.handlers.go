@@ -259,3 +259,84 @@ func (c *GameHandler) UpdateGamePrizeByGameId(ctx context.Context, request *pb.U
 	}
 	return &pb.Empty{}, nil
 }
+
+func (c *GameHandler) GetUserGamesByTimesAndGameTypes(ctx context.Context, request *pb.GetUserGamesByTimesAndGameTypesRequest) (*pb.GamesAndUserChoices, error) {
+	startTime, err := parseTime(request.StartTime, "failed to convert the start time, wrong format #4501")
+	if err != nil {
+		return nil, err
+	}
+
+	endTime, err := parseTime(request.EndTime, "failed to convert the end time, wrong format #4502")
+	if err != nil {
+		return nil, err
+	}
+
+	res, rerr := c.gameService.GetUserGamesByTimesAndGameType(request.UserId, startTime, endTime, request.GameType)
+	if rerr != nil {
+		return nil, rerr.ErrorToGRPCStatus()
+	}
+
+	gamesAndUserChoices := make([]*pb.GameAndUserChoice, 0)
+
+	for _, gameAndUserChoice := range res {
+
+		divisionDetails := make([]*pb.DivisionDetail, 0)
+		for _, dv := range gameAndUserChoice.DivisionDetails {
+			divisionDetails = append(divisionDetails, &pb.DivisionDetail{
+				Division:      dv.Division,
+				UserCount:     dv.UserCount,
+				DivisionPrize: dv.DivisionPrize,
+			})
+		}
+		userChoicesResult := make([]*pb.UserChoiceResultFiltered, 0)
+
+		for _, ucr := range gameAndUserChoice.UserChoice {
+
+			outMainNumbers := make([]*pb.ChosenMainNumbers, 0)
+			for _, c := range ucr.ChosenNumbers {
+				outMainNumbers = append(outMainNumbers, &pb.ChosenMainNumbers{
+					ChosenMainNumbers: c,
+				})
+			}
+
+			userChoicesResult = append(userChoicesResult, &pb.UserChoiceResultFiltered{
+				UserId:            ucr.UserId,
+				ChosenMainNumbers: outMainNumbers,
+				ChosenBonusNumber: ucr.ChosenBonusNumber,
+				BoughtPrice:       float32(ucr.BoughtPrice),
+			})
+		}
+
+		gamesAndUserChoices = append(gamesAndUserChoices, &pb.GameAndUserChoice{
+			Game:            toGameProto(&gameAndUserChoice.Game),
+			DivisionResults: toDivisionResultsProto(gameAndUserChoice.DivisionResult),
+			UserChoices:     userChoicesResult,
+			TicketUsed:      gameAndUserChoice.TicketUsed,
+			DivisionDetails: divisionDetails,
+		})
+	}
+	return &pb.GamesAndUserChoices{Games: gamesAndUserChoices}, nil
+}
+
+func (c *GameHandler) UpdateUserGameDivisionPrize(ctx context.Context, request *pb.UpdateUserGameDivisionPrizeRequest) (*pb.Empty, error) {
+	divisionUpdates := make([]models.DivisionUpdate, 0)
+	for _, dv := range request.DivisionUpdates {
+		users := make([]models.UserPrizeUpdate, 0)
+		for _, us := range dv.Users {
+			users = append(users, models.UserPrizeUpdate{
+				UserId:   us.UserId,
+				WonPrize: us.WonPrize,
+			})
+		}
+		divisionUpdates = append(divisionUpdates, models.DivisionUpdate{
+			DivisionName: dv.DivisionName,
+			Users:        users,
+		})
+	}
+	err := c.gameService.UpdateWonPrizeForUsers(request.GameId, divisionUpdates)
+	if err != nil {
+		return nil, err.ErrorToGRPCStatus()
+	}
+
+	return &pb.Empty{}, nil
+}

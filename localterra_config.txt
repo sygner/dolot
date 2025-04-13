@@ -1,0 +1,25 @@
+terrad keys add test1 --recover --keyring-backend test
+
+--------------
+notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius
+--------------
+terrad tx bank send test1 terra1jqt929u9tp2q6s9a79k9jx3zxec097z759e267 1000000uluna --fees=2266uluna --gas=200000 --chain-id=localterra --keyring-backend=test
+--------------
+ terrad keys list --keyring-backend test
+- name: test1
+  type: local
+  address: terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AjszqFJDRAYbEjZMuiD+ChqzbUSGq/RRu3zr0R6iJB5b"}'
+  mnemonic: ""
+- name: validator1
+  type: local
+  address: terra18l07z0juzru56f3lgrgd49r0escgymm8l2rkr6
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A+ZET4m2PSv6JzyImo7FtM6/Gqug1Osn/gFuJhQy0/vQ"}'
+  mnemonic: ""
+- name: validator2
+  type: local
+  address: terra16gk2nekzmsk98rup6n042r6zwx85kjf7vf0j3h
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AgOVUOUP8k29LwlH8gr5rcxBwkj/Y41wBY2SwqFZ57FD"}'
+  mnemonic: ""
+----------------------------------------
+terrad query bank balances terra1jqt929u9tp2q6s9a79k9jx3zxec097z759e267 --chain-id=localterra

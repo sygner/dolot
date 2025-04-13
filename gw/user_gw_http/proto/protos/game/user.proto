@@ -7,7 +7,6 @@ option go_package = "./";
 
 import "proto/protos/game/common.proto";
 
-
 service UserService{
     rpc AddUserChoice(AddUserChoiceRequest) returns (UserChoice);
     rpc GetUserChoicesByUserId(GetUserChoicesByUserIdRequest) returns (UserChoices);
@@ -26,7 +25,8 @@ message AddUserChoiceRequest {
     string game_id = 2; // Game ID
     repeated ChosenMainNumbers chosen_main_numbers = 3; // List of main numbers chosen by the user
     repeated ChosenBonusNumbers chosen_bonus_numbers = 4; // List of bonus numbers chosen by the user
-    bool should_return = 5; // Should return the created choice
+    float bought_price = 5;
+    bool should_return = 6; // Should return the created choice
 }
 
 // Message for chosen main numbers
@@ -46,7 +46,8 @@ message UserChoice {
     string game_id = 3; // Game ID
     repeated ChosenMainNumbers chosen_main_numbers = 4; // Main numbers chosen
     repeated ChosenBonusNumbers chosen_bonus_numbers = 5; // Bonus numbers chosen
-    string created_at = 6;
+    float bought_price = 6;
+    string created_at = 7;
 }
 
 
@@ -70,4 +71,11 @@ message GetUserChoicesByUserIdAndTimeRangeRequest{
     string start_time = 1;
     string end_time = 2;
     int32 user_id = 3;
+}
+
+message UserChoiceResultFiltered{
+    int32 user_id = 1;
+    repeated ChosenMainNumbers chosen_main_numbers = 2; // Main numbers chosen
+    repeated int32 chosen_bonus_number = 3;
+    float bought_price = 6;
 }

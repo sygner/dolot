@@ -32,3 +32,14 @@ type Transaction struct {
 	Amount        float64   `json:"amount"`
 	TransactionAt time.Time `json:"transaction_at"`
 }
+
+type Transactions struct {
+	Transactions []Transaction `json:"transactions"`
+	Total        *uint32       `json:"total,omitempty"`
+}
+type PreTransactionDetail struct {
+	GasLimit      float64 `json:"gas_limit"`
+	Amount        float64 `json:"amount"`
+	Tax           float64 `json:"tax"`
+	TaxPercentage string  `json:"tax_percentage"`
+}

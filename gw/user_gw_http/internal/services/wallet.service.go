@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"dolott_user_gw_http/internal/admin"
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/types"
 	pb "dolott_user_gw_http/proto/api/wallet"
@@ -22,9 +23,12 @@ type (
 		DeleteWalletByWalletId(int32) *types.Error
 		DeleteWalletsByUserId(int32) *types.Error
 		GetTransactionByTxId(string) (*models.Transaction, *types.Error)
-		GetTransactionsByWalletIdAndUserId(int32, int32) ([]models.Transaction, *types.Error)
+		GetTransactionsByWalletIdAndUserId(int32, int32) (*models.Transactions, *types.Error)
 		AddTransaction(*models.AddTransactionDTO) (*models.Transaction, *types.Error)
-		GetTransactionsByUserId(int32) ([]models.Transaction, *types.Error)
+		GetTransactionsByUserId(int32) (*models.Transactions, *types.Error)
+		GetPreTransactionDetail(*models.AddTransactionDTO) (*models.PreTransactionDetail, *types.Error)
+		GetTransactionsByWalletIdAndUserIdAndPagination(int32, int32, *models.Pagination) (*models.Transactions, *types.Error)
+		GetTransactionsByUserIdAndPagination(int32, *models.Pagination) (*models.Transactions, *types.Error)
 	}
 	walletService struct {
 		walletClient pb.WalletServiceClient
@@ -185,7 +189,7 @@ func (c *walletService) GetTransactionByTxId(txId string) (*models.Transaction, 
 	return toTransactionProto(res)
 }
 
-func (c *walletService) GetTransactionsByWalletIdAndUserId(walletId int32, userId int32) ([]models.Transaction, *types.Error) {
+func (c *walletService) GetTransactionsByWalletIdAndUserId(walletId int32, userId int32) (*models.Transactions, *types.Error) {
 	res, err := c.walletClient.GetTransactionsByWalletId(context.Background(), &pb.GetTransactionsByWalletIdRequest{
 		UserId:   userId,
 		WalletId: walletId,
@@ -197,6 +201,24 @@ func (c *walletService) GetTransactionsByWalletIdAndUserId(walletId int32, userI
 	return toTransactionsProto(res)
 }
 
+func (c *walletService) GetPreTransactionDetail(addTransactionRequest *models.AddTransactionDTO) (*models.PreTransactionDetail, *types.Error) {
+	res, err := c.walletClient.GetPreTransactionDetail(context.Background(), &pb.AddTransactionRequest{
+		Amount:           addTransactionRequest.Amount,
+		FromWalletId:     addTransactionRequest.FromWalletId,
+		FromWalletUserId: addTransactionRequest.FromWalletUserId,
+		ToWalletAddress:  addTransactionRequest.ToWalletAddress,
+		CoinId:           addTransactionRequest.CoinId,
+	})
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+	return &models.PreTransactionDetail{
+		GasLimit:      float64(res.GetGasLimit()),
+		Amount:        float64(res.GetAmount()),
+		Tax:           admin.TRANSACTION_TAX_PERCENTAGE,
+		TaxPercentage: fmt.Sprintf("%d", uint8((admin.TRANSACTION_TAX_PERCENTAGE*100))) + "%",
+	}, nil
+}
 func (c *walletService) AddTransaction(addTransactionRequest *models.AddTransactionDTO) (*models.Transaction, *types.Error) {
 	res, err := c.walletClient.AddTransaction(context.Background(), &pb.AddTransactionRequest{
 		Amount:           addTransactionRequest.Amount,
@@ -212,9 +234,41 @@ func (c *walletService) AddTransaction(addTransactionRequest *models.AddTransact
 	return toTransactionProto(res)
 }
 
-func (c *walletService) GetTransactionsByUserId(userId int32) ([]models.Transaction, *types.Error) {
+func (c *walletService) GetTransactionsByUserId(userId int32) (*models.Transactions, *types.Error) {
 	res, err := c.walletClient.GetTransactionsByUserId(context.Background(), &pb.UserId{
 		UserId: userId,
+	})
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+
+	return toTransactionsProto(res)
+}
+
+func (c *walletService) GetTransactionsByWalletIdAndUserIdAndPagination(walletId, userId int32, pagInation *models.Pagination) (*models.Transactions, *types.Error) {
+	res, err := c.walletClient.GetTransactionsByWalletIdAndUserIdAndPagination(context.Background(), &pb.GetTransactionsByWalletIdAndUserIdAndPaginationRequest{
+		UserId:   userId,
+		WalletId: walletId,
+		Pagination: &pb.Pagination{
+			Offset: pagInation.Offset,
+			Limit:  pagInation.Limit,
+			Total:  pagInation.Total,
+		},
+	})
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+	return toTransactionsProto(res)
+}
+
+func (c *walletService) GetTransactionsByUserIdAndPagination(userId int32, pagInation *models.Pagination) (*models.Transactions, *types.Error) {
+	res, err := c.walletClient.GetTransactionsByUserIdAndPagination(context.Background(), &pb.GetTransactionsByUserIdAndPaginationRequest{
+		UserId: userId,
+		Pagination: &pb.Pagination{
+			Offset: pagInation.Offset,
+			Limit:  pagInation.Limit,
+			Total:  pagInation.Total,
+		},
 	})
 	if err != nil {
 		return nil, types.ExtractGRPCErrDetails(err)

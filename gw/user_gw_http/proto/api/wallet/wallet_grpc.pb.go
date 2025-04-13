@@ -19,24 +19,27 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	WalletService_GetAllCoins_FullMethodName                  = "/wallet.WalletService/GetAllCoins"
-	WalletService_GetCoinById_FullMethodName                  = "/wallet.WalletService/GetCoinById"
-	WalletService_GetCoinBySymbol_FullMethodName              = "/wallet.WalletService/GetCoinBySymbol"
-	WalletService_CreateWallet_FullMethodName                 = "/wallet.WalletService/CreateWallet"
-	WalletService_GetBalanceByCoinIdAndUserId_FullMethodName  = "/wallet.WalletService/GetBalanceByCoinIdAndUserId"
-	WalletService_GetWalletsByUserId_FullMethodName           = "/wallet.WalletService/GetWalletsByUserId"
-	WalletService_GetWalletByAddress_FullMethodName           = "/wallet.WalletService/GetWalletByAddress"
-	WalletService_GetWalletBySid_FullMethodName               = "/wallet.WalletService/GetWalletBySid"
-	WalletService_GetWalletByWalletId_FullMethodName          = "/wallet.WalletService/GetWalletByWalletId"
-	WalletService_UpdateBalance_FullMethodName                = "/wallet.WalletService/UpdateBalance"
-	WalletService_DeleteWalletByWalletId_FullMethodName       = "/wallet.WalletService/DeleteWalletByWalletId"
-	WalletService_DeleteWalletsByUserId_FullMethodName        = "/wallet.WalletService/DeleteWalletsByUserId"
-	WalletService_CheckTransactionExists_FullMethodName       = "/wallet.WalletService/CheckTransactionExists"
-	WalletService_GetTransactionByTxId_FullMethodName         = "/wallet.WalletService/GetTransactionByTxId"
-	WalletService_GetTransactionsByWalletId_FullMethodName    = "/wallet.WalletService/GetTransactionsByWalletId"
-	WalletService_AddTransaction_FullMethodName               = "/wallet.WalletService/AddTransaction"
-	WalletService_GetTransactionsByUserId_FullMethodName      = "/wallet.WalletService/GetTransactionsByUserId"
-	WalletService_GetWalletsByUserIdsAndCoinId_FullMethodName = "/wallet.WalletService/GetWalletsByUserIdsAndCoinId"
+	WalletService_GetAllCoins_FullMethodName                                     = "/wallet.WalletService/GetAllCoins"
+	WalletService_GetCoinById_FullMethodName                                     = "/wallet.WalletService/GetCoinById"
+	WalletService_GetCoinBySymbol_FullMethodName                                 = "/wallet.WalletService/GetCoinBySymbol"
+	WalletService_CreateWallet_FullMethodName                                    = "/wallet.WalletService/CreateWallet"
+	WalletService_GetBalanceByCoinIdAndUserId_FullMethodName                     = "/wallet.WalletService/GetBalanceByCoinIdAndUserId"
+	WalletService_GetWalletsByUserId_FullMethodName                              = "/wallet.WalletService/GetWalletsByUserId"
+	WalletService_GetWalletByAddress_FullMethodName                              = "/wallet.WalletService/GetWalletByAddress"
+	WalletService_GetWalletBySid_FullMethodName                                  = "/wallet.WalletService/GetWalletBySid"
+	WalletService_GetWalletByWalletId_FullMethodName                             = "/wallet.WalletService/GetWalletByWalletId"
+	WalletService_UpdateBalance_FullMethodName                                   = "/wallet.WalletService/UpdateBalance"
+	WalletService_DeleteWalletByWalletId_FullMethodName                          = "/wallet.WalletService/DeleteWalletByWalletId"
+	WalletService_DeleteWalletsByUserId_FullMethodName                           = "/wallet.WalletService/DeleteWalletsByUserId"
+	WalletService_CheckTransactionExists_FullMethodName                          = "/wallet.WalletService/CheckTransactionExists"
+	WalletService_GetTransactionByTxId_FullMethodName                            = "/wallet.WalletService/GetTransactionByTxId"
+	WalletService_GetTransactionsByWalletId_FullMethodName                       = "/wallet.WalletService/GetTransactionsByWalletId"
+	WalletService_AddTransaction_FullMethodName                                  = "/wallet.WalletService/AddTransaction"
+	WalletService_GetTransactionsByUserId_FullMethodName                         = "/wallet.WalletService/GetTransactionsByUserId"
+	WalletService_GetWalletsByUserIdsAndCoinId_FullMethodName                    = "/wallet.WalletService/GetWalletsByUserIdsAndCoinId"
+	WalletService_GetPreTransactionDetail_FullMethodName                         = "/wallet.WalletService/GetPreTransactionDetail"
+	WalletService_GetTransactionsByWalletIdAndUserIdAndPagination_FullMethodName = "/wallet.WalletService/getTransactionsByWalletIdAndUserIdAndPagination"
+	WalletService_GetTransactionsByUserIdAndPagination_FullMethodName            = "/wallet.WalletService/getTransactionsByUserIdAndPagination"
 )
 
 // WalletServiceClient is the client API for WalletService service.
@@ -61,6 +64,9 @@ type WalletServiceClient interface {
 	AddTransaction(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*Transaction, error)
 	GetTransactionsByUserId(ctx context.Context, in *UserId, opts ...grpc.CallOption) (*Transactions, error)
 	GetWalletsByUserIdsAndCoinId(ctx context.Context, in *GetWalletsByUserIdsAndCoinIdRequest, opts ...grpc.CallOption) (*Wallets, error)
+	GetPreTransactionDetail(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*PreTransactionDetail, error)
+	GetTransactionsByWalletIdAndUserIdAndPagination(ctx context.Context, in *GetTransactionsByWalletIdAndUserIdAndPaginationRequest, opts ...grpc.CallOption) (*Transactions, error)
+	GetTransactionsByUserIdAndPagination(ctx context.Context, in *GetTransactionsByUserIdAndPaginationRequest, opts ...grpc.CallOption) (*Transactions, error)
 }
 
 type walletServiceClient struct {
@@ -251,6 +257,36 @@ func (c *walletServiceClient) GetWalletsByUserIdsAndCoinId(ctx context.Context, 
 	return out, nil
 }
 
+func (c *walletServiceClient) GetPreTransactionDetail(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*PreTransactionDetail, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PreTransactionDetail)
+	err := c.cc.Invoke(ctx, WalletService_GetPreTransactionDetail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *walletServiceClient) GetTransactionsByWalletIdAndUserIdAndPagination(ctx context.Context, in *GetTransactionsByWalletIdAndUserIdAndPaginationRequest, opts ...grpc.CallOption) (*Transactions, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Transactions)
+	err := c.cc.Invoke(ctx, WalletService_GetTransactionsByWalletIdAndUserIdAndPagination_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *walletServiceClient) GetTransactionsByUserIdAndPagination(ctx context.Context, in *GetTransactionsByUserIdAndPaginationRequest, opts ...grpc.CallOption) (*Transactions, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Transactions)
+	err := c.cc.Invoke(ctx, WalletService_GetTransactionsByUserIdAndPagination_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WalletServiceServer is the server API for WalletService service.
 // All implementations must embed UnimplementedWalletServiceServer
 // for forward compatibility.
@@ -273,6 +309,9 @@ type WalletServiceServer interface {
 	AddTransaction(context.Context, *AddTransactionRequest) (*Transaction, error)
 	GetTransactionsByUserId(context.Context, *UserId) (*Transactions, error)
 	GetWalletsByUserIdsAndCoinId(context.Context, *GetWalletsByUserIdsAndCoinIdRequest) (*Wallets, error)
+	GetPreTransactionDetail(context.Context, *AddTransactionRequest) (*PreTransactionDetail, error)
+	GetTransactionsByWalletIdAndUserIdAndPagination(context.Context, *GetTransactionsByWalletIdAndUserIdAndPaginationRequest) (*Transactions, error)
+	GetTransactionsByUserIdAndPagination(context.Context, *GetTransactionsByUserIdAndPaginationRequest) (*Transactions, error)
 	mustEmbedUnimplementedWalletServiceServer()
 }
 
@@ -336,6 +375,15 @@ func (UnimplementedWalletServiceServer) GetTransactionsByUserId(context.Context,
 }
 func (UnimplementedWalletServiceServer) GetWalletsByUserIdsAndCoinId(context.Context, *GetWalletsByUserIdsAndCoinIdRequest) (*Wallets, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetWalletsByUserIdsAndCoinId not implemented")
+}
+func (UnimplementedWalletServiceServer) GetPreTransactionDetail(context.Context, *AddTransactionRequest) (*PreTransactionDetail, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPreTransactionDetail not implemented")
+}
+func (UnimplementedWalletServiceServer) GetTransactionsByWalletIdAndUserIdAndPagination(context.Context, *GetTransactionsByWalletIdAndUserIdAndPaginationRequest) (*Transactions, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTransactionsByWalletIdAndUserIdAndPagination not implemented")
+}
+func (UnimplementedWalletServiceServer) GetTransactionsByUserIdAndPagination(context.Context, *GetTransactionsByUserIdAndPaginationRequest) (*Transactions, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTransactionsByUserIdAndPagination not implemented")
 }
 func (UnimplementedWalletServiceServer) mustEmbedUnimplementedWalletServiceServer() {}
 func (UnimplementedWalletServiceServer) testEmbeddedByValue()                       {}
@@ -682,6 +730,60 @@ func _WalletService_GetWalletsByUserIdsAndCoinId_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WalletService_GetPreTransactionDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddTransactionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).GetPreTransactionDetail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WalletService_GetPreTransactionDetail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).GetPreTransactionDetail(ctx, req.(*AddTransactionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WalletService_GetTransactionsByWalletIdAndUserIdAndPagination_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTransactionsByWalletIdAndUserIdAndPaginationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).GetTransactionsByWalletIdAndUserIdAndPagination(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WalletService_GetTransactionsByWalletIdAndUserIdAndPagination_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).GetTransactionsByWalletIdAndUserIdAndPagination(ctx, req.(*GetTransactionsByWalletIdAndUserIdAndPaginationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WalletService_GetTransactionsByUserIdAndPagination_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTransactionsByUserIdAndPaginationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).GetTransactionsByUserIdAndPagination(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WalletService_GetTransactionsByUserIdAndPagination_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).GetTransactionsByUserIdAndPagination(ctx, req.(*GetTransactionsByUserIdAndPaginationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WalletService_ServiceDesc is the grpc.ServiceDesc for WalletService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -760,6 +862,18 @@ var WalletService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetWalletsByUserIdsAndCoinId",
 			Handler:    _WalletService_GetWalletsByUserIdsAndCoinId_Handler,
+		},
+		{
+			MethodName: "GetPreTransactionDetail",
+			Handler:    _WalletService_GetPreTransactionDetail_Handler,
+		},
+		{
+			MethodName: "getTransactionsByWalletIdAndUserIdAndPagination",
+			Handler:    _WalletService_GetTransactionsByWalletIdAndUserIdAndPagination_Handler,
+		},
+		{
+			MethodName: "getTransactionsByUserIdAndPagination",
+			Handler:    _WalletService_GetTransactionsByUserIdAndPagination_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

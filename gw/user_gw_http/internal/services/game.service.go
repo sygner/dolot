@@ -6,9 +6,11 @@ import (
 	"dolott_user_gw_http/internal/models"
 	"dolott_user_gw_http/internal/types"
 	pb "dolott_user_gw_http/proto/api/game"
+	profile_pb "dolott_user_gw_http/proto/api/profile"
 	ticket_pb "dolott_user_gw_http/proto/api/ticket"
 	wallet_pb "dolott_user_gw_http/proto/api/wallet"
 	"log"
+	"strings"
 
 	"fmt"
 	"math"
@@ -33,6 +35,7 @@ type (
 		GetAllUserChoiceDivisionsByGameId(int32, string) ([]models.DivisionResult, *types.Error)
 		GetAllUsersChoiceDivisionsByGameId(string) ([]models.DivisionResult, *types.Error)
 		UpdateGamePrizeByGameId(string, *uint32, bool) *types.Error
+		GetUserGamesByTimesAndGameTypes(int32, *string, string, string) ([]models.GameAndUserChoice, *types.Error)
 		TransactionForWinner([]models.DivisionResult, string)
 	}
 	gameService struct {
@@ -40,16 +43,18 @@ type (
 		winnerClient  pb.WinnerServiceClient
 		ticketClient  ticket_pb.TicketServiceClient
 		walletClient  wallet_pb.WalletServiceClient
+		profileClient profile_pb.ProfileServiceClient
 		serverAddress string
 	}
 )
 
-func NewGameService(gameClient pb.GameServiceClient, ticketClient ticket_pb.TicketServiceClient, walletClient wallet_pb.WalletServiceClient, winnerClient pb.WinnerServiceClient, serverAddress string) GameService {
+func NewGameService(gameClient pb.GameServiceClient, ticketClient ticket_pb.TicketServiceClient, walletClient wallet_pb.WalletServiceClient, winnerClient pb.WinnerServiceClient, profileClient profile_pb.ProfileServiceClient, serverAddress string) GameService {
 	return &gameService{
 		gameClient:    gameClient,
 		winnerClient:  winnerClient,
 		ticketClient:  ticketClient,
 		walletClient:  walletClient,
+		profileClient: profileClient,
 		serverAddress: serverAddress,
 	}
 }
@@ -301,6 +306,104 @@ func (c *gameService) UpdateGamePrizeByGameId(gameId string, prize *uint32, auto
 	return nil
 }
 
+func (c *gameService) GetUserGamesByTimesAndGameTypes(userId int32, gameType *string, startTime, endTime string) ([]models.GameAndUserChoice, *types.Error) {
+	res, err := c.gameClient.GetUserGamesByTimesAndGameTypes(context.Background(), &pb.GetUserGamesByTimesAndGameTypesRequest{
+		UserId:    userId,
+		GameType:  gameType,
+		StartTime: startTime,
+		EndTime:   endTime,
+	})
+	if err != nil {
+		return nil, types.ExtractGRPCErrDetails(err)
+	}
+
+	games := make([]models.GameAndUserChoice, 0, len(res.Games))
+
+	for _, game := range res.Games {
+		gm, err := toGameProto(game.Game)
+		if err != nil {
+			return nil, err
+		}
+
+		gameResult := models.GameAndUserChoice{
+			Game:       *gm,
+			Won:        false,
+			TicketUsed: game.TicketUsed,
+		}
+
+		if len(game.DivisionDetails) > 0 {
+			divisionDetails := make([]models.DivisionDetail, len(game.DivisionDetails))
+			for i, dv := range game.DivisionDetails {
+				divisionDetails[i] = models.DivisionDetail{
+					Division:      dv.Division,
+					UserCount:     dv.UserCount,
+					DivisionPrize: dv.DivisionPrize,
+				}
+			}
+			gameResult.DivisionDetails = &divisionDetails
+		}
+
+		if len(game.DivisionResults.DivisionResults) > 0 {
+			gameResult.Won = true
+			divisionResults := make([]models.DivisionResult, len(game.DivisionResults.DivisionResults))
+			for i, c := range game.DivisionResults.DivisionResults {
+				userChoices := make([]models.UserChoiceResultDetail, len(c.UserChoice))
+				for j, uc := range c.UserChoice {
+					userChoices[j] = models.UserChoiceResultDetail{
+						UserId:              uc.UserId,
+						ChosenMainNumbers:   uc.ChosenMainNumber,
+						ChosenBonusNumber:   uc.ChosenBonusNumber,
+						MainAndBonusNumbers: formatChosenNumbers(int32(game.Game.GameType), uc.ChosenMainNumber, uc.ChosenBonusNumber),
+						BoughtPrice:         uc.BoughtPrice,
+					}
+				}
+				divisionResults[i] = models.DivisionResult{
+					MatchCount:  c.MatchCount,
+					HasBonus:    c.HasBonus,
+					Division:    c.Division,
+					UserChoices: userChoices,
+				}
+			}
+			gameResult.DivisionResult = &divisionResults
+		}
+
+		if len(game.UserChoices) > 0 {
+			userChoices := make([]models.UserChoiceResult, len(game.UserChoices))
+			for i, uc := range game.UserChoices {
+				formattedChoices := make([]string, len(uc.ChosenMainNumbers))
+				for j, c := range uc.ChosenMainNumbers {
+					formattedChoices[j] = formatChosenNumbers(int32(game.Game.GameType), c.ChosenMainNumbers, getBonusNumber(uc.ChosenBonusNumber, j))
+				}
+				userChoices[i] = models.UserChoiceResult{
+					UserId:              uc.UserId,
+					MainAndBonusNumbers: formattedChoices,
+					BoughtPrice:         uc.BoughtPrice,
+				}
+			}
+			gameResult.UserChoice = &userChoices
+		}
+
+		games = append(games, gameResult)
+	}
+
+	return games, nil
+}
+
+func getBonusNumber(bonusNumbers []int32, index int) int32 {
+	if len(bonusNumbers) > index {
+		return bonusNumbers[index]
+	}
+	return 0
+}
+
+func formatChosenNumbers(gameType int32, mainNumbers []int32, bonusNumber int32) string {
+	mainStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(mainNumbers)), ","), "[]")
+	if gameType == 2 || gameType == 3 {
+		return fmt.Sprintf("%s+%d", mainStr, bonusNumber)
+	}
+	return mainStr
+}
+
 func (c *gameService) TransactionForWinner(data []models.DivisionResult, gameId string) {
 	// wlt, err := c.walletClient.GetWalletsByUserId(context.Background(), &wallet_pb.UserId{
 	// 	UserId: 0,
@@ -309,6 +412,11 @@ func (c *gameService) TransactionForWinner(data []models.DivisionResult, gameId 
 	// 	fmt.Println("Wallet Not Found")
 	// 	return
 	// }
+
+	luncPrice, rerr := constants.GetLUNCPriceCoinPaprika()
+	if rerr != nil {
+		return
+	}
 
 	// Fetch game details
 	gameRes, err := c.gameClient.GetGameByGameId(context.Background(), &pb.GameId{GameId: gameId})
@@ -359,9 +467,11 @@ func (c *gameService) TransactionForWinner(data []models.DivisionResult, gameId 
 	// Map to store total prizes per user
 	userPrizeMap := make(map[int32]float64)
 	userIds := make([]int32, 0)
+	divisionUpdateWinners := make([]*pb.DivisionUpdate, 0)
 
 	// Process each division result
 	for _, dr := range data {
+		updateUserWonPrizeWinners := make([]*pb.UserPrizeUpdate, 0)
 		divisionPercentage, exists := divisionMap[dr.Division]
 		if !exists || len(dr.UserChoices) == 0 {
 			continue
@@ -386,13 +496,22 @@ func (c *gameService) TransactionForWinner(data []models.DivisionResult, gameId 
 		// Ensure divisionTotalPrize is split among all winners
 		if winnerCount > 0 {
 			prizePerWinner := divisionTotalPrize / winnerCount
+
 			for _, uc := range dr.UserChoices {
 				if _, exists := userPrizeMap[uc.UserId]; !exists {
 					userIds = append(userIds, uc.UserId)
 				}
+				updateUserWonPrizeWinners = append(updateUserWonPrizeWinners, &pb.UserPrizeUpdate{
+					UserId:   uc.UserId,
+					WonPrize: float32(prizePerWinner * luncPrice),
+				})
 				fmt.Println("Share of Winning UserId:", uc.UserId, "Prize:", userPrizeMap[uc.UserId], prizePerWinner, "Division:", dr.Division, "Map of Division:", divisionMap[dr.Division], "JackPot:", currentJackpot, "Percentage:", divisionTotalPrize)
 				userPrizeMap[uc.UserId] += prizePerWinner // Add user's share of winnings
 			}
+			divisionUpdateWinners = append(divisionUpdateWinners, &pb.DivisionUpdate{
+				DivisionName: dr.Division,
+				Users:        updateUserWonPrizeWinners,
+			})
 		}
 	}
 
@@ -420,7 +539,11 @@ func (c *gameService) TransactionForWinner(data []models.DivisionResult, gameId 
 			fmt.Printf("No wallet found for user %d\n", userId)
 			continue
 		}
-
+		c.profileClient.ChangeImpressionAndDCoin(context.Background(), &profile_pb.ChangeImpressionAndDCreditRequest{
+			UserId:     userId,
+			Impression: int32(math.Round(totalPrize)),
+			DCoin:      int32(math.Round(totalPrize)),
+		})
 		fmt.Printf("Paying User %d Prize: %.2f\n", userId, totalPrize)
 		trx, err := c.walletClient.AddTransaction(context.Background(), &wallet_pb.AddTransactionRequest{
 			FromWalletUserId: constants.MAIN_LUNC_USER_WALLET_ID,
@@ -440,6 +563,13 @@ func (c *gameService) TransactionForWinner(data []models.DivisionResult, gameId 
 		GameId:    gameId,
 		TotalPaid: fmt.Sprintf("%.2f", paidPrize),
 	})
+	fmt.Println(" ********** \n ", divisionUpdateWinners, "\n ******")
+	if _, err := c.gameClient.UpdateUserGameDivisionPrize(context.Background(), &pb.UpdateUserGameDivisionPrizeRequest{
+		DivisionUpdates: divisionUpdateWinners,
+		GameId:          gameId,
+	}); err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println("All transactions processed successfully.")
 }
 

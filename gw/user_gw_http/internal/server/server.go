@@ -2,6 +2,7 @@ package server
 
 import (
 	"dolott_user_gw_http/internal/client"
+	"dolott_user_gw_http/internal/constants"
 	"dolott_user_gw_http/internal/controllers"
 	"dolott_user_gw_http/internal/middleware"
 	"dolott_user_gw_http/internal/routes"
@@ -12,6 +13,7 @@ import (
 	ticket_pb "dolott_user_gw_http/proto/api/ticket"
 	wallet_pb "dolott_user_gw_http/proto/api/wallet"
 	"fmt"
+	"log"
 	"safir/libs/appconfigs"
 	"safir/libs/appstates"
 	"strings"
@@ -76,27 +78,46 @@ func RunServer() {
 		userService           services.UserService           = services.NewUserService(userClient)
 
 		winnerService   services.WinnerService   = services.NewWinnerService(winnerClient)
-		gameService     services.GameService     = services.NewGameService(gameClient, ticketClient, walletClient, winnerClient, *appDomain)
+		gameService     services.GameService     = services.NewGameService(gameClient, ticketClient, walletClient, winnerClient, profileClient, *appDomain)
 		userGameService services.UserGameService = services.NewUserGameService(userGameClient, ticketClient)
 		walletService   services.WalletService   = services.NewWalletService(walletClient)
 		ticketService   services.TicketService   = services.NewTicketService(ticketClient, walletClient)
 
 		jobQueue services.JobQueue = services.NewJobQueue(gameService, walletService)
 
-		profileService services.ProfileService = services.NewProfileService(profileClient)
+		profileService services.ProfileService = services.NewProfileService(profileClient, walletClient)
 
 		authenticationController controllers.AuthenticationController = controllers.NewAuthenticationController(authenticationService, profileService, walletService)
 		userController           controllers.UserController           = controllers.NewUserController(userService)
 		profileController        controllers.ProfileController        = controllers.NewProfileController(profileService, walletService)
 
-		winnerController   controllers.WinnerHandler   = controllers.NewWinnerHandler(winnerService)
-		gameController     controllers.GameHandler     = controllers.NewGameHandler(gameService, *fileStoragePath)
-		userGameController controllers.UserGameHandler = controllers.NewUserGameHandler(userGameService)
+		winnerController   controllers.WinnerController = controllers.NewWinnerController(winnerService)
+		gameController     controllers.GameController   = controllers.NewGameController(gameService, *fileStoragePath)
+		userGameController controllers.UserGameHandler  = controllers.NewUserGameHandler(userGameService)
 
 		walletController controllers.WalletController = controllers.NewWalletController(walletService)
 
 		ticketController controllers.TicketController = controllers.NewTicketController(ticketService)
+
+		adminController controllers.AdminController = controllers.NewAdminController()
 	)
+	// get the main account
+	res, cerr := walletService.GetWalletsByUserId(0)
+	if cerr != nil {
+		log.Fatalf("failed to get main wallet: %v", cerr)
+	}
+	if len(res) == 0 {
+		log.Fatalf("main wallet not found")
+	}
+	for _, wallet := range res {
+		if wallet.CoinId == 1 {
+			constants.MAIN_LUNC_WALLET_ID = wallet.Id
+			constants.MAIN_LUNC_USER_WALLET_ID = wallet.UserId
+			constants.MAIN_LUNC_WALLET_ADDRESS = wallet.Address
+			break
+		}
+	}
+
 	services.JOB_QUEUE = jobQueue
 	// Create a new Fiber instance.
 	app := fiber.New()
@@ -120,6 +141,8 @@ func RunServer() {
 	routes.ProfileGroup(v1, profileController, middleware)
 	routes.WalletGroup(v1, walletController, middleware)
 	routes.TicketGroup(v1, ticketController, middleware)
+	routes.AdminGroup(v1, adminController, middleware)
+
 	// Default route for a simple hello world response.
 	app.Get("/", func(c *fiber.Ctx) error {
 		fmt.Println(c.Context())

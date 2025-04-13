@@ -1,4 +1,4 @@
-import { AddTransactionRequest, BooleanResult, GetTransactionsByWalletIdRequest, Transaction, TransactionId, Transactions, UserId, WalletId } from "../../proto/api/service_pb";
+import { AddTransactionRequest, BooleanResult, getTransactionsByUserIdAndPaginationRequest, getTransactionsByWalletIdAndUserIdAndPaginationRequest, GetTransactionsByWalletIdRequest, PreTransactionDetail, Transaction, TransactionId, Transactions, UserId, WalletId } from "../../proto/api/service_pb";
 import { TransactionService } from "../services/transaction"
 import * as grpc from '@grpc/grpc-js';
 import { CustomError } from "../types/error";
@@ -15,6 +15,9 @@ export class TransactionHandler {
         this.getTransactionsByWalletId = this.getTransactionsByWalletId.bind(this);
         this.AddTransaction = this.AddTransaction.bind(this);
         this.getTransactionsByUserId = this.getTransactionsByUserId.bind(this);
+        this.getPreTransactionDetail = this.getPreTransactionDetail.bind(this);
+        this.getTransactionsByWalletIdAndUserIdAndPagination = this.getTransactionsByWalletIdAndUserIdAndPagination.bind(this);
+        this.getTransactionsByUserIdAndPagination = this.getTransactionsByUserIdAndPagination.bind(this);
     }
 
     public async checkTransactionExists(
@@ -157,6 +160,134 @@ export class TransactionHandler {
         }
     }
 
+    public async getPreTransactionDetail(
+        call: grpc.ServerUnaryCall<AddTransactionRequest, PreTransactionDetail>,
+        callback: grpc.sendUnaryData<PreTransactionDetail>
+    ) {
+        try {
+            const request: AddTransactionRequestModel =
+            {
+                amount: call.request.getAmount(),
+                from_wallet_id: call.request.getFromWalletId(),
+                from_wallet_user_id: call.request.getFromWalletUserId(),
+                to_wallet_address: call.request.getToWalletAddress()
+            }
+            const result = await this.transactionService.preTransaction(request);
+            let detail = new PreTransactionDetail()
+
+            const amount = result.amount.get('uluna')?.amount!.toNumber()!;
+            const gas_limit = result.gas_limit;
+            detail.setAmount(amount);
+            detail.setGasLimit(gas_limit);
+
+            callback(null, detail);
+        } catch (error) {
+            console.error('Error in AddTransaction:', error);
+            if (error instanceof CustomError) {
+                callback(error.toGrpcStatus(), null);
+            } else {
+                callback(
+                    {
+                        code: grpc.status.UNKNOWN,
+                        details: "An unexpected error occurred",
+                    },
+                    null
+                );
+            }
+        }
+    }
+
+    public async getTransactionsByWalletIdAndUserIdAndPagination(
+        call: grpc.ServerUnaryCall<getTransactionsByWalletIdAndUserIdAndPaginationRequest, Transactions>,
+        callback: grpc.sendUnaryData<Transactions>
+    ) {
+        try {
+            const walletId = call.request.getWalletId();
+            const userId = call.request.getUserId();
+            const limit = call.request.getPagination()?.getLimit() || 10;
+            const offset = call.request.getPagination()?.getOffset() || 0;
+            const total = call.request.getPagination()?.getTotal() || false;
+            const result = await this.transactionService.getTransactionsByWalletIdAndUserIdAndPagination(walletId, userId, limit, offset,total);
+            console.log(result.count!)
+            const transactions = new Transactions();
+            result.transactions.forEach((transaction) => {
+                const t = new Transaction();
+                t.setTxId(transaction.tx_id!);
+                t.setCurrencyId(transaction.currency_id!);
+                t.setCurrencyName(transaction.currency_name!);
+                t.setAmount(transaction.amount!);
+                t.setFromAddress(transaction.from_address!);
+                t.setToAddress(transaction.to_address!);
+                t.setFromWalletId(transaction.from_wallet_id!);
+                t.setFromPublicKey(transaction.from_public_key!);
+                t.setTransactionAt(getUnixTimestamp(transaction.transaction_at!).toString());
+                transactions.addTransactions(t);
+            });
+            if (total){
+                transactions.setTotal(result.count!);
+            }
+            callback(null, transactions);
+
+        } catch (error) {
+            console.error('Error in AddTransaction:', error);
+            if (error instanceof CustomError) {
+                callback(error.toGrpcStatus(), null);
+            } else {
+                callback(
+                    {
+                        code: grpc.status.UNKNOWN,
+                        details: "An unexpected error occurred",
+                    },
+                    null
+                );
+            }
+        }
+    }
+
+    public async getTransactionsByUserIdAndPagination(
+        call: grpc.ServerUnaryCall<getTransactionsByUserIdAndPaginationRequest, Transactions>,
+        callback: grpc.sendUnaryData<Transactions>
+    ) {
+        try {
+            const userId = call.request.getUserId();
+            const limit = call.request.getPagination()?.getLimit() || 10;
+            const offset = call.request.getPagination()?.getOffset() || 0;
+            const total = call.request.getPagination()?.getTotal() || false;
+            const result = await this.transactionService.getTransactionsByUserIdAndPagination(userId, limit, offset,total);
+            const transactions = new Transactions();
+            result.transactions.forEach((transaction) => {
+                const t = new Transaction();
+                t.setTxId(transaction.tx_id!);
+                t.setCurrencyId(transaction.currency_id!);
+                t.setCurrencyName(transaction.currency_name!);
+                t.setAmount(transaction.amount!);
+                t.setFromAddress(transaction.from_address!);
+                t.setToAddress(transaction.to_address!);
+                t.setFromWalletId(transaction.from_wallet_id!);
+                t.setFromPublicKey(transaction.from_public_key!);
+                t.setTransactionAt(getUnixTimestamp(transaction.transaction_at!).toString());
+                transactions.addTransactions(t);
+            });
+            if (total){
+                transactions.setTotal(result.count!);
+            }
+            callback(null, transactions);
+
+        } catch (error) {
+            console.error('Error in AddTransaction:', error);
+            if (error instanceof CustomError) {
+                callback(error.toGrpcStatus(), null);
+            } else {
+                callback(
+                    {
+                        code: grpc.status.UNKNOWN,
+                        details: "An unexpected error occurred",
+                    },
+                    null
+                );
+            }
+        }
+    }
 
     public async AddTransaction(
         call: grpc.ServerUnaryCall<AddTransactionRequest, Transaction>,

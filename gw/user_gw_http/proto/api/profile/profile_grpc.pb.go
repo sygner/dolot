@@ -19,18 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ProfileService_AddProfile_FullMethodName              = "/profile.ProfileService/AddProfile"
-	ProfileService_GetProfileByUsername_FullMethodName    = "/profile.ProfileService/GetProfileByUsername"
-	ProfileService_GetProfileBySid_FullMethodName         = "/profile.ProfileService/GetProfileBySid"
-	ProfileService_GetProfileByUserId_FullMethodName      = "/profile.ProfileService/GetProfileByUserId"
-	ProfileService_ChangeUserScore_FullMethodName         = "/profile.ProfileService/ChangeUserScore"
-	ProfileService_ChangeUserGamesQuantity_FullMethodName = "/profile.ProfileService/ChangeUserGamesQuantity"
-	ProfileService_ChangeUserWonGames_FullMethodName      = "/profile.ProfileService/ChangeUserWonGames"
-	ProfileService_ChangeUserLostGames_FullMethodName     = "/profile.ProfileService/ChangeUserLostGames"
-	ProfileService_ChangeUserRank_FullMethodName          = "/profile.ProfileService/ChangeUserRank"
-	ProfileService_ChangeUserImpression_FullMethodName    = "/profile.ProfileService/ChangeUserImpression"
-	ProfileService_CheckUsernameExists_FullMethodName     = "/profile.ProfileService/CheckUsernameExists"
-	ProfileService_UpdateProfile_FullMethodName           = "/profile.ProfileService/UpdateProfile"
+	ProfileService_AddProfile_FullMethodName               = "/profile.ProfileService/AddProfile"
+	ProfileService_GetProfileByUsername_FullMethodName     = "/profile.ProfileService/GetProfileByUsername"
+	ProfileService_GetProfileBySid_FullMethodName          = "/profile.ProfileService/GetProfileBySid"
+	ProfileService_GetProfileByUserId_FullMethodName       = "/profile.ProfileService/GetProfileByUserId"
+	ProfileService_ChangeUserScore_FullMethodName          = "/profile.ProfileService/ChangeUserScore"
+	ProfileService_ChangeUserGamesQuantity_FullMethodName  = "/profile.ProfileService/ChangeUserGamesQuantity"
+	ProfileService_ChangeUserWonGames_FullMethodName       = "/profile.ProfileService/ChangeUserWonGames"
+	ProfileService_ChangeUserLostGames_FullMethodName      = "/profile.ProfileService/ChangeUserLostGames"
+	ProfileService_ChangeUserRank_FullMethodName           = "/profile.ProfileService/ChangeUserRank"
+	ProfileService_ChangeUserImpression_FullMethodName     = "/profile.ProfileService/ChangeUserImpression"
+	ProfileService_CheckUsernameExists_FullMethodName      = "/profile.ProfileService/CheckUsernameExists"
+	ProfileService_UpdateProfile_FullMethodName            = "/profile.ProfileService/UpdateProfile"
+	ProfileService_GetAllUserRanking_FullMethodName        = "/profile.ProfileService/GetAllUserRanking"
+	ProfileService_SearchUsername_FullMethodName           = "/profile.ProfileService/SearchUsername"
+	ProfileService_GetUserLeaderBoard_FullMethodName       = "/profile.ProfileService/GetUserLeaderBoard"
+	ProfileService_ChangeImpressionAndDCoin_FullMethodName = "/profile.ProfileService/ChangeImpressionAndDCoin"
 )
 
 // ProfileServiceClient is the client API for ProfileService service.
@@ -49,6 +53,10 @@ type ProfileServiceClient interface {
 	ChangeUserImpression(ctx context.Context, in *ChangeImpressionRequest, opts ...grpc.CallOption) (*Empty, error)
 	CheckUsernameExists(ctx context.Context, in *Username, opts ...grpc.CallOption) (*Empty, error)
 	UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*Empty, error)
+	GetAllUserRanking(ctx context.Context, in *UserId, opts ...grpc.CallOption) (*Ranking, error)
+	SearchUsername(ctx context.Context, in *Username, opts ...grpc.CallOption) (*Profiles, error)
+	GetUserLeaderBoard(ctx context.Context, in *UserId, opts ...grpc.CallOption) (*Profiles, error)
+	ChangeImpressionAndDCoin(ctx context.Context, in *ChangeImpressionAndDCreditRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type profileServiceClient struct {
@@ -179,6 +187,46 @@ func (c *profileServiceClient) UpdateProfile(ctx context.Context, in *UpdateProf
 	return out, nil
 }
 
+func (c *profileServiceClient) GetAllUserRanking(ctx context.Context, in *UserId, opts ...grpc.CallOption) (*Ranking, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Ranking)
+	err := c.cc.Invoke(ctx, ProfileService_GetAllUserRanking_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *profileServiceClient) SearchUsername(ctx context.Context, in *Username, opts ...grpc.CallOption) (*Profiles, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Profiles)
+	err := c.cc.Invoke(ctx, ProfileService_SearchUsername_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *profileServiceClient) GetUserLeaderBoard(ctx context.Context, in *UserId, opts ...grpc.CallOption) (*Profiles, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Profiles)
+	err := c.cc.Invoke(ctx, ProfileService_GetUserLeaderBoard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *profileServiceClient) ChangeImpressionAndDCoin(ctx context.Context, in *ChangeImpressionAndDCreditRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, ProfileService_ChangeImpressionAndDCoin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProfileServiceServer is the server API for ProfileService service.
 // All implementations must embed UnimplementedProfileServiceServer
 // for forward compatibility.
@@ -195,6 +243,10 @@ type ProfileServiceServer interface {
 	ChangeUserImpression(context.Context, *ChangeImpressionRequest) (*Empty, error)
 	CheckUsernameExists(context.Context, *Username) (*Empty, error)
 	UpdateProfile(context.Context, *UpdateProfileRequest) (*Empty, error)
+	GetAllUserRanking(context.Context, *UserId) (*Ranking, error)
+	SearchUsername(context.Context, *Username) (*Profiles, error)
+	GetUserLeaderBoard(context.Context, *UserId) (*Profiles, error)
+	ChangeImpressionAndDCoin(context.Context, *ChangeImpressionAndDCreditRequest) (*Empty, error)
 	mustEmbedUnimplementedProfileServiceServer()
 }
 
@@ -240,6 +292,18 @@ func (UnimplementedProfileServiceServer) CheckUsernameExists(context.Context, *U
 }
 func (UnimplementedProfileServiceServer) UpdateProfile(context.Context, *UpdateProfileRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProfile not implemented")
+}
+func (UnimplementedProfileServiceServer) GetAllUserRanking(context.Context, *UserId) (*Ranking, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllUserRanking not implemented")
+}
+func (UnimplementedProfileServiceServer) SearchUsername(context.Context, *Username) (*Profiles, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchUsername not implemented")
+}
+func (UnimplementedProfileServiceServer) GetUserLeaderBoard(context.Context, *UserId) (*Profiles, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserLeaderBoard not implemented")
+}
+func (UnimplementedProfileServiceServer) ChangeImpressionAndDCoin(context.Context, *ChangeImpressionAndDCreditRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeImpressionAndDCoin not implemented")
 }
 func (UnimplementedProfileServiceServer) mustEmbedUnimplementedProfileServiceServer() {}
 func (UnimplementedProfileServiceServer) testEmbeddedByValue()                        {}
@@ -478,6 +542,78 @@ func _ProfileService_UpdateProfile_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProfileService_GetAllUserRanking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfileServiceServer).GetAllUserRanking(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProfileService_GetAllUserRanking_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfileServiceServer).GetAllUserRanking(ctx, req.(*UserId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProfileService_SearchUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Username)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfileServiceServer).SearchUsername(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProfileService_SearchUsername_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfileServiceServer).SearchUsername(ctx, req.(*Username))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProfileService_GetUserLeaderBoard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfileServiceServer).GetUserLeaderBoard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProfileService_GetUserLeaderBoard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfileServiceServer).GetUserLeaderBoard(ctx, req.(*UserId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProfileService_ChangeImpressionAndDCoin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeImpressionAndDCreditRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfileServiceServer).ChangeImpressionAndDCoin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProfileService_ChangeImpressionAndDCoin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfileServiceServer).ChangeImpressionAndDCoin(ctx, req.(*ChangeImpressionAndDCreditRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProfileService_ServiceDesc is the grpc.ServiceDesc for ProfileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -532,6 +668,22 @@ var ProfileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateProfile",
 			Handler:    _ProfileService_UpdateProfile_Handler,
+		},
+		{
+			MethodName: "GetAllUserRanking",
+			Handler:    _ProfileService_GetAllUserRanking_Handler,
+		},
+		{
+			MethodName: "SearchUsername",
+			Handler:    _ProfileService_SearchUsername_Handler,
+		},
+		{
+			MethodName: "GetUserLeaderBoard",
+			Handler:    _ProfileService_GetUserLeaderBoard_Handler,
+		},
+		{
+			MethodName: "ChangeImpressionAndDCoin",
+			Handler:    _ProfileService_ChangeImpressionAndDCoin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

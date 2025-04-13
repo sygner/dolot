@@ -15,4 +15,5 @@ export interface AddTransactionRequest {
     from_wallet_id?:number;
     from_wallet_user_id?:number;
     to_wallet_address?:string;
+    should_check?:boolean;
 }

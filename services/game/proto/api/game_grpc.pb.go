@@ -36,6 +36,8 @@ const (
 	GameService_GetAllUserChoiceDivisionsByGameId_FullMethodName  = "/game.GameService/GetAllUserChoiceDivisionsByGameId"
 	GameService_GetAllUsersChoiceDivisionsByGameId_FullMethodName = "/game.GameService/GetAllUsersChoiceDivisionsByGameId"
 	GameService_UpdateGamePrizeByGameId_FullMethodName            = "/game.GameService/UpdateGamePrizeByGameId"
+	GameService_GetUserGamesByTimesAndGameTypes_FullMethodName    = "/game.GameService/GetUserGamesByTimesAndGameTypes"
+	GameService_UpdateUserGameDivisionPrize_FullMethodName        = "/game.GameService/UpdateUserGameDivisionPrize"
 )
 
 // GameServiceClient is the client API for GameService service.
@@ -59,6 +61,8 @@ type GameServiceClient interface {
 	GetAllUserChoiceDivisionsByGameId(ctx context.Context, in *GetAllUserChoiceDivisionsByGameIdRequest, opts ...grpc.CallOption) (*DivisionResults, error)
 	GetAllUsersChoiceDivisionsByGameId(ctx context.Context, in *GameId, opts ...grpc.CallOption) (*DivisionResults, error)
 	UpdateGamePrizeByGameId(ctx context.Context, in *UpdateGamePrizeByGameIdRequest, opts ...grpc.CallOption) (*Empty, error)
+	GetUserGamesByTimesAndGameTypes(ctx context.Context, in *GetUserGamesByTimesAndGameTypesRequest, opts ...grpc.CallOption) (*GamesAndUserChoices, error)
+	UpdateUserGameDivisionPrize(ctx context.Context, in *UpdateUserGameDivisionPrizeRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type gameServiceClient struct {
@@ -239,6 +243,26 @@ func (c *gameServiceClient) UpdateGamePrizeByGameId(ctx context.Context, in *Upd
 	return out, nil
 }
 
+func (c *gameServiceClient) GetUserGamesByTimesAndGameTypes(ctx context.Context, in *GetUserGamesByTimesAndGameTypesRequest, opts ...grpc.CallOption) (*GamesAndUserChoices, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GamesAndUserChoices)
+	err := c.cc.Invoke(ctx, GameService_GetUserGamesByTimesAndGameTypes_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameServiceClient) UpdateUserGameDivisionPrize(ctx context.Context, in *UpdateUserGameDivisionPrizeRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, GameService_UpdateUserGameDivisionPrize_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameServiceServer is the server API for GameService service.
 // All implementations must embed UnimplementedGameServiceServer
 // for forward compatibility.
@@ -260,6 +284,8 @@ type GameServiceServer interface {
 	GetAllUserChoiceDivisionsByGameId(context.Context, *GetAllUserChoiceDivisionsByGameIdRequest) (*DivisionResults, error)
 	GetAllUsersChoiceDivisionsByGameId(context.Context, *GameId) (*DivisionResults, error)
 	UpdateGamePrizeByGameId(context.Context, *UpdateGamePrizeByGameIdRequest) (*Empty, error)
+	GetUserGamesByTimesAndGameTypes(context.Context, *GetUserGamesByTimesAndGameTypesRequest) (*GamesAndUserChoices, error)
+	UpdateUserGameDivisionPrize(context.Context, *UpdateUserGameDivisionPrizeRequest) (*Empty, error)
 	mustEmbedUnimplementedGameServiceServer()
 }
 
@@ -320,6 +346,12 @@ func (UnimplementedGameServiceServer) GetAllUsersChoiceDivisionsByGameId(context
 }
 func (UnimplementedGameServiceServer) UpdateGamePrizeByGameId(context.Context, *UpdateGamePrizeByGameIdRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGamePrizeByGameId not implemented")
+}
+func (UnimplementedGameServiceServer) GetUserGamesByTimesAndGameTypes(context.Context, *GetUserGamesByTimesAndGameTypesRequest) (*GamesAndUserChoices, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserGamesByTimesAndGameTypes not implemented")
+}
+func (UnimplementedGameServiceServer) UpdateUserGameDivisionPrize(context.Context, *UpdateUserGameDivisionPrizeRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserGameDivisionPrize not implemented")
 }
 func (UnimplementedGameServiceServer) mustEmbedUnimplementedGameServiceServer() {}
 func (UnimplementedGameServiceServer) testEmbeddedByValue()                     {}
@@ -648,6 +680,42 @@ func _GameService_UpdateGamePrizeByGameId_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GameService_GetUserGamesByTimesAndGameTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserGamesByTimesAndGameTypesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServiceServer).GetUserGamesByTimesAndGameTypes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameService_GetUserGamesByTimesAndGameTypes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServiceServer).GetUserGamesByTimesAndGameTypes(ctx, req.(*GetUserGamesByTimesAndGameTypesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GameService_UpdateUserGameDivisionPrize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserGameDivisionPrizeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameServiceServer).UpdateUserGameDivisionPrize(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameService_UpdateUserGameDivisionPrize_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServiceServer).UpdateUserGameDivisionPrize(ctx, req.(*UpdateUserGameDivisionPrizeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GameService_ServiceDesc is the grpc.ServiceDesc for GameService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -722,6 +790,14 @@ var GameService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateGamePrizeByGameId",
 			Handler:    _GameService_UpdateGamePrizeByGameId_Handler,
+		},
+		{
+			MethodName: "GetUserGamesByTimesAndGameTypes",
+			Handler:    _GameService_GetUserGamesByTimesAndGameTypes_Handler,
+		},
+		{
+			MethodName: "UpdateUserGameDivisionPrize",
+			Handler:    _GameService_UpdateUserGameDivisionPrize_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

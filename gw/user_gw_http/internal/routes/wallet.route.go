@@ -24,6 +24,9 @@ func WalletGroup(app fiber.Router, walletController controllers.WalletController
 
 	walletGroup.Get("/transaction/txid/:txId", walletController.GetTransactionByTxId)
 	walletGroup.Get("/transaction/wallet/:wallet_id", walletController.GetTransactionsByWalletIdAndUserId)
+	walletGroup.Post("/transaction/p/wallet", walletController.GetTransactionsByWalletIdAndUserIdAndPagination)
+	walletGroup.Post("/transaction/p/usr", walletController.GetTransactionsByUserIdAndPagination)
 	walletGroup.Get("/transaction/usr", walletController.GetTransactionsByUserId)
+	walletGroup.Get("/transaction/pre", walletController.GetPreTransactionDetail)
 	walletGroup.Post("/transaction/add", walletController.AddTransaction)
 }

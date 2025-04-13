@@ -23,6 +23,87 @@ export namespace Empty {
     }
 }
 
+export class Pagination extends jspb.Message { 
+    getOffset(): number;
+    setOffset(value: number): Pagination;
+    getLimit(): number;
+    setLimit(value: number): Pagination;
+    getTotal(): boolean;
+    setTotal(value: boolean): Pagination;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Pagination.AsObject;
+    static toObject(includeInstance: boolean, msg: Pagination): Pagination.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: Pagination, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Pagination;
+    static deserializeBinaryFromReader(message: Pagination, reader: jspb.BinaryReader): Pagination;
+}
+
+export namespace Pagination {
+    export type AsObject = {
+        offset: number,
+        limit: number,
+        total: boolean,
+    }
+}
+
+export class getTransactionsByWalletIdAndUserIdAndPaginationRequest extends jspb.Message { 
+    getUserId(): number;
+    setUserId(value: number): getTransactionsByWalletIdAndUserIdAndPaginationRequest;
+    getWalletId(): number;
+    setWalletId(value: number): getTransactionsByWalletIdAndUserIdAndPaginationRequest;
+
+    hasPagination(): boolean;
+    clearPagination(): void;
+    getPagination(): Pagination | undefined;
+    setPagination(value?: Pagination): getTransactionsByWalletIdAndUserIdAndPaginationRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): getTransactionsByWalletIdAndUserIdAndPaginationRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: getTransactionsByWalletIdAndUserIdAndPaginationRequest): getTransactionsByWalletIdAndUserIdAndPaginationRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: getTransactionsByWalletIdAndUserIdAndPaginationRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): getTransactionsByWalletIdAndUserIdAndPaginationRequest;
+    static deserializeBinaryFromReader(message: getTransactionsByWalletIdAndUserIdAndPaginationRequest, reader: jspb.BinaryReader): getTransactionsByWalletIdAndUserIdAndPaginationRequest;
+}
+
+export namespace getTransactionsByWalletIdAndUserIdAndPaginationRequest {
+    export type AsObject = {
+        userId: number,
+        walletId: number,
+        pagination?: Pagination.AsObject,
+    }
+}
+
+export class getTransactionsByUserIdAndPaginationRequest extends jspb.Message { 
+    getUserId(): number;
+    setUserId(value: number): getTransactionsByUserIdAndPaginationRequest;
+
+    hasPagination(): boolean;
+    clearPagination(): void;
+    getPagination(): Pagination | undefined;
+    setPagination(value?: Pagination): getTransactionsByUserIdAndPaginationRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): getTransactionsByUserIdAndPaginationRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: getTransactionsByUserIdAndPaginationRequest): getTransactionsByUserIdAndPaginationRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: getTransactionsByUserIdAndPaginationRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): getTransactionsByUserIdAndPaginationRequest;
+    static deserializeBinaryFromReader(message: getTransactionsByUserIdAndPaginationRequest, reader: jspb.BinaryReader): getTransactionsByUserIdAndPaginationRequest;
+}
+
+export namespace getTransactionsByUserIdAndPaginationRequest {
+    export type AsObject = {
+        userId: number,
+        pagination?: Pagination.AsObject,
+    }
+}
+
 export class BooleanResult extends jspb.Message { 
     getResult(): boolean;
     setResult(value: boolean): BooleanResult;
@@ -522,6 +603,11 @@ export class Transactions extends jspb.Message {
     setTransactionsList(value: Array<Transaction>): Transactions;
     addTransactions(value?: Transaction, index?: number): Transaction;
 
+    hasTotal(): boolean;
+    clearTotal(): void;
+    getTotal(): number | undefined;
+    setTotal(value: number): Transactions;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Transactions.AsObject;
     static toObject(includeInstance: boolean, msg: Transactions): Transactions.AsObject;
@@ -535,5 +621,29 @@ export class Transactions extends jspb.Message {
 export namespace Transactions {
     export type AsObject = {
         transactionsList: Array<Transaction.AsObject>,
+        total?: number,
+    }
+}
+
+export class PreTransactionDetail extends jspb.Message { 
+    getAmount(): number;
+    setAmount(value: number): PreTransactionDetail;
+    getGasLimit(): number;
+    setGasLimit(value: number): PreTransactionDetail;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PreTransactionDetail.AsObject;
+    static toObject(includeInstance: boolean, msg: PreTransactionDetail): PreTransactionDetail.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: PreTransactionDetail, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PreTransactionDetail;
+    static deserializeBinaryFromReader(message: PreTransactionDetail, reader: jspb.BinaryReader): PreTransactionDetail;
+}
+
+export namespace PreTransactionDetail {
+    export type AsObject = {
+        amount: number,
+        gasLimit: number,
     }
 }

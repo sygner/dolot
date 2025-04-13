@@ -1,10 +1,12 @@
 package models
 
 type UserChoiceResult struct {
-	UserId            int32     `json:"user_id"`
-	ChosenNumbers     [][]int32 `json:"chosen_numbers"` // Assuming it's a 2D array
-	ChosenBonusNumber []int32   `json:"chosen_bonus_number"`
-	MatchCounts       []int32   `json:"match_counts"` // New field for match counts
+	UserId              int32     `json:"user_id"`
+	ChosenNumbers       [][]int32 `json:"chosen_numbers,omitempty"` // Assuming it's a 2D array
+	ChosenBonusNumber   []int32   `json:"chosen_bonus_number,omitempty"`
+	MainAndBonusNumbers []string  `json:"chosen_numbers_string,omitempty"`
+	BoughtPrice         float32   `json:"bought_price"`
+	MatchCounts         []int32   `json:"match_counts,omitempty"` // New field for match counts
 }
 
 type UserChoice struct {
@@ -13,14 +15,17 @@ type UserChoice struct {
 	GameId             string    `json:"game_id"`
 	ChosenMainNumbers  [][]int32 `json:"chosen_main_numbers"`
 	ChosenBonusNumbers [][]int32 `json:"chosen_bonus_numbers"`
+	BoughtPrice        float32   `json:"bought_price"`
 	CreatedAt          string    `json:"created_at"`
 }
 
 type UserChoiceResultDetail struct {
-	UserId            int32   `json:"user_id"`
-	ChosenMainNumbers []int32 `json:"chosen_main_numbers"`
-	ChosenBonusNumber int32   `json:"chosen_bonus_number"`
-	MatchCount        int32   `json:"match_count"`
+	UserId              int32   `json:"user_id"`
+	ChosenMainNumbers   []int32 `json:"chosen_main_numbers"`
+	ChosenBonusNumber   int32   `json:"chosen_bonus_number"`
+	MainAndBonusNumbers string  `json:"chosen_numbers_string,omitempty"`
+	BoughtPrice         float32 `json:"bought_price"`
+	MatchCount          int32   `json:"match_count"`
 }
 
 type UserChoices struct {
@@ -41,6 +46,7 @@ type DivisionResultCount struct {
 	HasBonus      bool    `json:"has_bonus"`   // Whether the division requires a matching bonus number
 	Count         uint32  `json:"count"`       // len of division
 	Division      string  `json:"division"`
+	BoughtPrice   float32 `json:"bought_price"`
 	DivisionPrize float64 `json:"division_prize"`
 }
 

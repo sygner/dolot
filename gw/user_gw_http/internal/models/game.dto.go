@@ -32,3 +32,9 @@ type GetAllUserPreviousGamesByGameTypeDTO struct {
 	GameType   int32      `json:"game_type"`
 	Pagination Pagination `json:"pagination"`
 }
+
+type GetUserGamesByTimesAndGameTypesDTO struct {
+	GameType  *int32 `json:"game_type,omitempty"`
+	StartTime string `json:"start_time"`
+	EndTime   string `json:"end_time"`
+}

@@ -62,8 +62,8 @@ export class TransactionService {
         if (!walletResult)
             throw new CustomError('Wallet not found', 404)
         console.log("Transfer ", walletResult, transactionDetails)
-        
-        if (walletResult.user_id != 0){
+
+        if (walletResult.user_id != 0) {
             if (walletResult.user_id !== transactionDetails.from_wallet_user_id)
                 throw new CustomError('User not authorized', 401);
         }
@@ -129,6 +129,73 @@ export class TransactionService {
         return await this.transactionRepository.deleteTransactionsByWalletId(walletId);
     }
 
+    public async getTransactionsByWalletIdAndUserIdAndPagination(walletId: number, userId: number, limit: number, offset: number, total: boolean) {
+        const transactions = await this.transactionRepository.getTransactionsByWalletIdAndUserIdAndPagination(walletId, userId, limit, offset);
+
+        if (!transactions)
+            throw new CustomError('Transaction not found', 404);
+
+        if (total) {
+            const count = await this.transactionRepository.getTransactionsByWalletIdAndUserIdAndPaginationCount(walletId, userId);
+            return { transactions, count };
+        }
+
+        return { transactions };
+    }
+
+    public async getTransactionsByUserIdAndPagination(userId: number, limit: number, offset: number, total: boolean) {
+        const transactions = await this.transactionRepository.getTransactionsByUserIdAndPagination(userId, limit, offset);
+
+        if (!transactions)
+            throw new CustomError('Transaction not found', 404);
+
+        if (total) {
+            const count = await this.transactionRepository.getTransactionsByUserIdAndPaginationCount(userId);
+            return { transactions, count };
+        }
+
+
+        return { transactions };
+    }
+
+    public async preTransaction(transactionDetails: AddTransactionRequest): Promise<Fee> {
+        const walletResult = await this.walletRepository.getWalletByWalletId(transactionDetails.from_wallet_id!);
+        if (!walletResult)
+            throw new CustomError('Wallet not found', 404)
+        console.log("Transfer ", walletResult, transactionDetails)
+
+        if (walletResult.user_id != 0) {
+            if (walletResult.user_id !== transactionDetails.from_wallet_user_id)
+                throw new CustomError('User not authorized', 401);
+        }
+        if (!walletResult)
+            throw new CustomError('Wallet not found', 404);
+
+        const latestBalance = await GetLunaBalanceByCoinIdAndUserId(this.walletRepository, walletResult.coin_id!, walletResult.user_id!)
+        if (latestBalance <= transactionDetails.amount!) {
+            throw new CustomError('Insufficient balance', 400);
+        }
+        const mk = new MnemonicKey({
+            mnemonic: walletResult.mnemonic!,
+        });
+        let accountInfo = await terra.auth.accountInfo(mk.accAddress('terra'));
+        let sequenceNumber = accountInfo.getSequenceNumber();
+        const send = new MsgSend(
+            mk.accAddress('terra'),
+            transactionDetails.to_wallet_address!,
+            { uluna: transactionDetails.amount! }
+        );
+        const estimatedFee = await terra.tx.estimateFee(
+            [{ sequenceNumber: sequenceNumber, publicKey: mk.publicKey }],
+            {
+                chainID: chainID,
+                msgs: [send],
+
+            }
+        );
+        const fee = new Fee(estimatedFee.gas_limit, { uluna: estimatedFee.amount.get('uluna')?.amount! })
+        return fee
+    }
     protected async sendLuncTransaction(walletResult: Wallet, transactionDetails: AddTransactionRequest) {
 
         const mk = new MnemonicKey({
@@ -150,15 +217,15 @@ export class TransactionService {
             console.log("#1");
 
 
-            // const estimatedFee = await terra.tx.estimateFee(
-            //     [{ sequenceNumber: sequenceNumber, publicKey: mk.publicKey }],
-            //     {
-            //         chainID: chainID,
-            //         msgs: [send],
+            const estimatedFee = await terra.tx.estimateFee(
+                [{ sequenceNumber: sequenceNumber, publicKey: mk.publicKey }],
+                {
+                    chainID: chainID,
+                    msgs: [send],
 
-            //     }
-            // );
-            const estimatedFee = new Fee(91414, { uluna: "2000" }); // Adjust values as needed
+                }
+            );
+            // const estimatedFee = new Fee(91414, { uluna: "2000" }); // Adjust values as needed
 
             console.log("#2");
 
@@ -176,7 +243,7 @@ export class TransactionService {
                 msgs: [send],
                 memo: randomAlphanumeric(32),
                 chainID: chainID,
-                sequence:sequenceNumber,
+                sequence: sequenceNumber,
                 fee: new Fee(estimatedFee.gas_limit, { uluna: estimatedFee.amount.get('uluna')?.amount! }),
             });
 
@@ -197,11 +264,19 @@ export class TransactionService {
             throw new CustomError(`Transaction failed to broadcast ${error}`, 500);
         }
 
-        await GetLunaBalanceByAddress(this.walletRepository, transactionDetails.to_wallet_address!)
-        await GetLunaBalanceByCoinIdAndUserId(this.walletRepository, walletResult.coin_id!, walletResult.user_id!)
+        try {
+            await GetLunaBalanceByAddress(this.walletRepository, transactionDetails.to_wallet_address!);
+        } catch (error) {
+            console.warn("Error fetching Luna balance by address. Ignoring error:", error);
+        }
+        try {
+            await GetLunaBalanceByCoinIdAndUserId(this.walletRepository, walletResult.coin_id!, walletResult.user_id!);
+
+        } catch (error) {
+            console.warn("Error fetching Luna balance by Coin ID and User ID. Ignoring error:", error);
+        }
         console.log("__()##@@##()__")
         return tx;
     }
-
 }
 

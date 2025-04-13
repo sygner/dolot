@@ -9,23 +9,23 @@ import (
 )
 
 type (
-	WinnerHandler interface {
+	WinnerController interface {
 		GetWinnersByGameId(*fiber.Ctx) error
 		GetWinnersByGameIdCount(*fiber.Ctx) error
 		UpdateTotalPaidUsers(*fiber.Ctx) error
 	}
-	winnerHandler struct {
+	winnerController struct {
 		winnerService services.WinnerService
 	}
 )
 
-func NewWinnerHandler(winnerService services.WinnerService) WinnerHandler {
-	return &winnerHandler{
+func NewWinnerController(winnerService services.WinnerService) WinnerController {
+	return &winnerController{
 		winnerService: winnerService,
 	}
 }
 
-func (c *winnerHandler) GetWinnersByGameId(ctx *fiber.Ctx) error {
+func (c *winnerController) GetWinnersByGameId(ctx *fiber.Ctx) error {
 	gameId := ctx.Params("game_id")
 	if gameId == "" {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -43,7 +43,7 @@ func (c *winnerHandler) GetWinnersByGameId(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *winnerHandler) GetWinnersByGameIdCount(ctx *fiber.Ctx) error {
+func (c *winnerController) GetWinnersByGameIdCount(ctx *fiber.Ctx) error {
 	gameId := ctx.Params("game_id")
 	if gameId == "" {
 		return ctx.Status(400).JSON(map[string]interface{}{
@@ -61,7 +61,7 @@ func (c *winnerHandler) GetWinnersByGameIdCount(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *winnerHandler) UpdateTotalPaidUsers(ctx *fiber.Ctx) error {
+func (c *winnerController) UpdateTotalPaidUsers(ctx *fiber.Ctx) error {
 	updateTotalPaidDTO := new(models.UpdateTotalPaidDTO)
 	if err := ctx.BodyParser(updateTotalPaidDTO); err != nil {
 		return ctx.Status(400).JSON(map[string]interface{}{

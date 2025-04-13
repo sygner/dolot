@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func WinnerGroup(app fiber.Router, winnerController controllers.WinnerHandler, middleware middleware.MiddlewareService) {
+func WinnerGroup(app fiber.Router, winnerController controllers.WinnerController, middleware middleware.MiddlewareService) {
 	winnerGroup := app.Group("/game/winner")
 	winnerGroup.Use(middleware.VerificationMiddleware)
 	winnerGroup.Get("/gm/:game_id", winnerController.GetWinnersByGameId)

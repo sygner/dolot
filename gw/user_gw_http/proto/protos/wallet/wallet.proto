@@ -9,7 +9,6 @@ option go_package = "./";
 
 package wallet;
 
-
 service WalletService {
   rpc GetAllCoins(Empty) returns (Coins);
   rpc GetCoinById(CoinId) returns (Coin);
@@ -29,10 +28,30 @@ service WalletService {
   rpc AddTransaction(AddTransactionRequest) returns (Transaction);
   rpc GetTransactionsByUserId(UserId) returns (Transactions);
   rpc GetWalletsByUserIdsAndCoinId(GetWalletsByUserIdsAndCoinIdRequest) returns (Wallets);
+  rpc GetPreTransactionDetail(AddTransactionRequest) returns (PreTransactionDetail);
+  rpc getTransactionsByWalletIdAndUserIdAndPagination(getTransactionsByWalletIdAndUserIdAndPaginationRequest) returns (Transactions);
+  rpc getTransactionsByUserIdAndPagination(getTransactionsByUserIdAndPaginationRequest) returns (Transactions);
 }
 
 message Empty{
 
+}
+
+message Pagination {
+  int32 offset = 1;
+  int32 limit = 2;
+  bool total = 3;
+}
+
+message getTransactionsByWalletIdAndUserIdAndPaginationRequest {
+  int32 user_id = 1;
+  int32 wallet_id = 2;
+  Pagination pagination = 3;
+}
+
+message getTransactionsByUserIdAndPaginationRequest {
+  int32 user_id = 1;
+  Pagination pagination = 2;
 }
 
 message BooleanResult{
@@ -147,4 +166,10 @@ message Transaction{
 
 message Transactions{
   repeated Transaction transactions = 1;
+  optional uint32 total = 2;
+}
+
+message PreTransactionDetail{
+  float amount = 1;
+  float gas_limit = 2;
 }

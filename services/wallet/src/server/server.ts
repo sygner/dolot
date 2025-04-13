@@ -15,6 +15,7 @@ import { TransactionRepository } from '../repository/transaction.repository';
 import { TransactionHandler } from '../handlers/transaction';
 import * as fs from "fs"
 import { parse } from 'yaml';
+import { CustomError } from '../types/error';
 const GreeterServiceS: IWalletServiceService | IWalletServiceServer | any = WalletServiceService;
 
 async function main() {
@@ -51,8 +52,28 @@ async function main() {
   const walletHandler = new WalletHandler(walletService);
   const coinHandler = new CoinHandler(coinService);
   const transactionHandler = new TransactionHandler(transactionService);
-
-  server.addService(GreeterServiceS, {
+  
+  try {
+    const mainWallet = await walletService.createWallet({
+      user_id:0,
+      coin_id:1
+  })
+ const done = await walletRepository.makeTheMainAccountIndexToZero()
+ if (done) {
+    mainWallet.id = 0
+    console.log(`\x1b[32m[SERVER]\x1b[0m Main Account Index Set To Zero`,mainWallet);
+ }else{
+  return
+ } 
+  } catch (error) {
+    console.log(`\x1b[31m[SERVER]\x1b[0m Error Setting Main Account Index To Zero `,error);
+    if (error instanceof CustomError) {
+      if (error.message != "Wallet already exists") {
+        return
+      }
+    }
+  }
+ server.addService(GreeterServiceS, {
     "getAllCoins": coinHandler.getAllCoins,
     "getCoinById": coinHandler.GetCoinById,
     "getCoinBySymbol": coinHandler.GetCoinBySymbol,
@@ -68,6 +89,9 @@ async function main() {
     "getTransactionsByWalletId": transactionHandler.getTransactionsByWalletId,
     "addTransaction": transactionHandler.AddTransaction,
     "getTransactionsByUserId": transactionHandler.getTransactionsByUserId,
+    "getPreTransactionDetail":transactionHandler.getPreTransactionDetail,
+    "getTransactionsByWalletIdAndUserIdAndPagination": transactionHandler.getTransactionsByWalletIdAndUserIdAndPagination,
+    "getTransactionsByUserIdAndPagination": transactionHandler.getTransactionsByUserIdAndPagination,
     "getWalletBySid":walletHandler.getWalletBySid,
     "getWalletByWalletId":walletHandler.getWalletByWalletId,
     "getWalletsByUserIdsAndCoinId":walletHandler.getWalletsByUserIdsAndCoinId,

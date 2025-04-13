@@ -32,6 +32,32 @@ type Game struct {
 	CreatedAt        time.Time `db:"created_at" json:"created_at"`
 }
 
+type DivisionDetail struct {
+	Division      string  `json:"division"`
+	DivisionPrize float32 `json:"won_prize"`
+	UserCount     uint32  `json:"user_count"`
+}
+type GameAndUserChoice struct {
+	Game            Game               `json:"game"`
+	DivisionResult  []DivisionResult   `json:"division_result"`
+	UserChoice      []UserChoiceResult `json:"user_choices"`
+	TicketUsed      uint32             `json:"ticket_used"`
+	DivisionDetails []DivisionDetail   `json:"division_details"`
+}
+type GamesAndUserChoices struct {
+	Games []GameAndUserChoice `json:"games"`
+}
+
+type UserPrizeUpdate struct {
+	UserId   int32   `json:"user_id"`
+	WonPrize float32 `json:"won_prize"`
+}
+
+type DivisionUpdate struct {
+	DivisionName string            `json:"division_name"`
+	Users        []UserPrizeUpdate `json:"users"`
+}
+
 // GameType is an enum type for lottery game types
 type GameType int
 

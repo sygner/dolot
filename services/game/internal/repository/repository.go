@@ -26,6 +26,7 @@ type (
 		GetAllPreviousGamesCount() (int32, *types.Error)
 		GetAllGames(int32, int32) ([]models.Game, *types.Error)
 		GetAllGamesCount() (int32, *types.Error)
+		GetUserGamesByTimesAndGameType(int32, time.Time, time.Time, *string) ([]models.GameAndUserChoice, *types.Error)
 		GetGameTypes() ([]models.GameTypeDetail, *types.Error)
 		UpdateGameTypeDetail(int32, *string, int32, int32, bool) *types.Error
 		GetAllUserPreviousGames(int32, int32, int32) ([]models.Game, *types.Error)
@@ -47,6 +48,7 @@ type (
 		GetWinnersByGameId(string) (*models.Winners, *types.Error)
 		UpdateTotalPaidUsers(string, string) *types.Error
 		GetLastWinnersByGameType(int32) (*models.Winners, *types.Error)
+		UpdateWonPrizeForUsers(string, []models.DivisionUpdate) *types.Error
 	}
 	gameRepository struct {
 		db *sql.DB
