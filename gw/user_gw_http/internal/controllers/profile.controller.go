@@ -240,10 +240,21 @@ func (c *profileController) GetUserLeaderBoard(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
 	}
-	return ctx.JSON(map[string]interface{}{
-		"data":    res,
-		"success": true,
-	})
+	response := map[string]interface{}{}
+
+	response["lowest_rank"] = res[:len(res)/2]
+	response["highest_rank"] = res[len(res)/2:]
+	for _, row := range res {
+		if userData.UserId == row.UserId {
+			userProfile, err := c.profileService.GetProfileByUserId(userData.UserId)
+			if err != nil {
+				return ctx.Status(err.ErrorToHttpStatus()).JSON(err.ErrorToJsonMessage())
+			}
+			response["user_profile"] = userProfile
+			break
+		}
+	}
+	return ctx.JSON(response)
 }
 
 func (c *profileController) UpdateUserRank(ctx *fiber.Ctx) error {

@@ -186,6 +186,7 @@ export class TransactionHandler {
             if (error instanceof CustomError) {
                 callback(error.toGrpcStatus(), null);
             } else {
+                console.log(error)
                 callback(
                     {
                         code: grpc.status.UNKNOWN,

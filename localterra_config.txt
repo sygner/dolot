@@ -1,9 +1,11 @@
+docker exec -it localterra-terrad-1 /bin/sh
+-------------------------
 terrad keys add test1 --recover --keyring-backend test
 
 --------------
 notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius
 --------------
-terrad tx bank send test1 terra1jqt929u9tp2q6s9a79k9jx3zxec097z759e267 1000000uluna --fees=2266uluna --gas=200000 --chain-id=localterra --keyring-backend=test
+terrad tx bank send test1 terra1pu8rplhc5n3vev2efm2xps523lzedkh5q8yvxz 100000000uluna --fees=2266uluna --gas=200000 --chain-id=localterra --keyring-backend=test
 --------------
  terrad keys list --keyring-backend test
 - name: test1

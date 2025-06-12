@@ -6,7 +6,6 @@ import { WalletRepository } from "../repository/wallet.repository";
 import { GetLunaBalanceByAddress, GetLunaBalanceByCoinIdAndUserId, MAX_BALANCE_RETRIES, terra, chainID } from "./contant"
 import { randomAlphabet, randomAlphanumeric } from '../utils/rand';
 import { Wallet } from '../models/wallet';
-import { Delay } from '../utils/time';
 
 export class TransactionService {
     private transactionRepository: TransactionRepository;
@@ -178,21 +177,22 @@ export class TransactionService {
         const mk = new MnemonicKey({
             mnemonic: walletResult.mnemonic!,
         });
-        let accountInfo = await terra.auth.accountInfo(mk.accAddress('terra'));
-        let sequenceNumber = accountInfo.getSequenceNumber();
+      const accountInfo = await terra.auth.accountInfo(mk.accAddress('terra'));
         const send = new MsgSend(
             mk.accAddress('terra'),
             transactionDetails.to_wallet_address!,
             { uluna: transactionDetails.amount! }
         );
-        const estimatedFee = await terra.tx.estimateFee(
-            [{ sequenceNumber: sequenceNumber, publicKey: mk.publicKey }],
-            {
-                chainID: chainID,
-                msgs: [send],
 
-            }
-        );
+
+const estimatedFee = await terra.tx.estimateFee(
+    [{ sequenceNumber: accountInfo.getSequenceNumber(), publicKey: mk.publicKey }],
+    {
+        chainID: chainID,
+        msgs: [send],
+    }
+);
+
         const fee = new Fee(estimatedFee.gas_limit, { uluna: estimatedFee.amount.get('uluna')?.amount! })
         return fee
     }

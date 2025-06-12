@@ -317,6 +317,8 @@ func (c *gameService) GetUserGamesByTimesAndGameTypes(userId int32, gameType *st
 		return nil, types.ExtractGRPCErrDetails(err)
 	}
 
+	// Track seen game IDs
+	seenGames := make(map[string]bool)
 	games := make([]models.GameAndUserChoice, 0, len(res.Games))
 
 	for _, game := range res.Games {
@@ -324,6 +326,12 @@ func (c *gameService) GetUserGamesByTimesAndGameTypes(userId int32, gameType *st
 		if err != nil {
 			return nil, err
 		}
+
+		// Skip if we've already processed this game ID
+		if seenGames[gm.Id] {
+			continue
+		}
+		seenGames[gm.Id] = true
 
 		gameResult := models.GameAndUserChoice{
 			Game:       *gm,

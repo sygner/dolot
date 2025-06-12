@@ -8,6 +8,7 @@ import (
 	"dolott_user_gw_http/internal/types"
 	pb "dolott_user_gw_http/proto/api/profile"
 	wallet_pb "dolott_user_gw_http/proto/api/wallet"
+	"fmt"
 )
 
 type (
@@ -291,6 +292,7 @@ func (c *profileService) GetUserLeaderBoard(userId int32) ([]models.Profile, *ty
 		UserId: userId,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return nil, types.ExtractGRPCErrDetails(err)
 	}
 

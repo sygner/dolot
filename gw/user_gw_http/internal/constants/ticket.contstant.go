@@ -25,7 +25,7 @@ type CoinPaprikaResponse struct {
 }
 
 func GetLUNCPriceCoinPaprika() (float64, *types.Error) {
-	url := "https://api.coinpaprika.com/v1/tickers/lunc-terra-luna-classic"
+	url := "https://api.coinpaprika.com/v1/tickers/luna-terra"
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get(url)
@@ -45,13 +45,4 @@ func GetLUNCPriceCoinPaprika() (float64, *types.Error) {
 
 	fmt.Println(cpResp)
 	return cpResp.Quotes.USD.Price, nil
-}
-
-func main() {
-	price, err := GetLUNCPriceCoinPaprika()
-	if err != nil {
-		fmt.Printf("Error fetching LUNC price: %s\n", err.Message)
-		return
-	}
-	fmt.Printf("LUNC Price from CoinPaprika: $%f\n", price)
 }

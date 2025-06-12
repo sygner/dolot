@@ -148,6 +148,7 @@ SELECT
 		&ranking.AllRankChangesCount,
 	)
 	if err != nil {
+
 		return nil, types.NewInternalError("failed to get the user ranking #3023")
 	}
 	return ranking, nil
@@ -156,59 +157,60 @@ SELECT
 func (c *profileRepository) GetUserLeaderBoard(userId int32) ([]models.Profile, *types.Error) {
 	query := `
 WITH ranked_users AS (
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM profiles
     ORDER BY rank ASC
 ),
 user_rank_details AS (
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM ranked_users
     WHERE user_id = $1  -- Current user
 ),
 highest_ranks AS (
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM ranked_users
     ORDER BY rank ASC
     LIMIT 3
 ),
 above_user_ranks AS (
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM ranked_users
     WHERE rank < (SELECT rank FROM user_rank_details)
     ORDER BY rank ASC
     LIMIT 3
 ),
 below_user_ranks AS (
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM ranked_users
     WHERE rank > (SELECT rank FROM user_rank_details)
     ORDER BY rank ASC
     LIMIT 3
 )
 -- Use UNION (not UNION ALL) to avoid duplicates, then apply DISTINCT
-SELECT DISTINCT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+SELECT DISTINCT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
 FROM (
     -- Current User Rank
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM user_rank_details
     UNION
     -- Top 3 Ranks excluding the current user
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM highest_ranks
     WHERE user_id != (SELECT user_id FROM user_rank_details)
     UNION
     -- Users Above the current user
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM above_user_ranks
     UNION
     -- Users Below the current user
-    SELECT user_id, sid, username, score, impression, d_credit, rank, games_quantity, won_games, lost_games, created_at
+    SELECT user_id, sid, username, score, impression, d_coin, rank, games_quantity, won_games, lost_games, created_at
     FROM below_user_ranks
 ) AS final_result
 ORDER BY rank ASC;
 `
 	rows, err := c.db.Query(query, userId)
 	if err != nil {
+		fmt.Println(err)
 		return nil, types.NewInternalError("failed to fetch the data #3023")
 	}
 	defer rows.Close()
