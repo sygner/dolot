@@ -219,6 +219,7 @@ func (c *walletService) GetPreTransactionDetail(addTransactionRequest *models.Ad
 		TaxPercentage: fmt.Sprintf("%d", uint8((admin.TRANSACTION_TAX_PERCENTAGE*100))) + "%",
 	}, nil
 }
+
 func (c *walletService) AddTransaction(addTransactionRequest *models.AddTransactionDTO) (*models.Transaction, *types.Error) {
 	res, err := c.walletClient.AddTransaction(context.Background(), &pb.AddTransactionRequest{
 		Amount:           addTransactionRequest.Amount,
