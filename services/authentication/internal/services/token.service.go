@@ -5,7 +5,7 @@ import (
 	"dolott_authentication/internal/repository"
 	"dolott_authentication/internal/types"
 	"dolott_authentication/internal/utils"
-	"safir/libs/idgen"
+	"neo/libs/idgen"
 	"time"
 )
 

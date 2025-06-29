@@ -14,8 +14,8 @@ import (
 	wallet_pb "dolott_user_gw_http/proto/api/wallet"
 	"fmt"
 	"log"
-	"safir/libs/appconfigs"
-	"safir/libs/appstates"
+	"neo/libs/appconfigs"
+	"neo/libs/appstates"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"

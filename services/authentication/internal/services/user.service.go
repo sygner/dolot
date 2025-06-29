@@ -10,7 +10,7 @@ import (
 	"dolott_authentication/internal/utils"
 	"encoding/json"
 	"fmt"
-	"safir/libs/idgen"
+	"neo/libs/idgen"
 	"time"
 
 	"github.com/redis/go-redis/v9"

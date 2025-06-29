@@ -4,7 +4,7 @@ import (
 	"dolott_game/internal/models"
 	"dolott_game/internal/repository"
 	"dolott_game/internal/types"
-	"safir/libs/idgen"
+	"neo/libs/idgen"
 	"time"
 )
 

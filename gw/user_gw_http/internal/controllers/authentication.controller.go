@@ -5,7 +5,7 @@ import (
 	"dolott_user_gw_http/internal/services"
 	"dolott_user_gw_http/internal/types"
 	"fmt"
-	"safir/libs/idgen"
+	"neo/libs/idgen"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"

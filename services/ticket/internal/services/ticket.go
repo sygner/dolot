@@ -4,7 +4,7 @@ import (
 	"dolott_ticket/internal/models"
 	"dolott_ticket/internal/repository"
 	"dolott_ticket/internal/types"
-	"safir/libs/idgen"
+	"neo/libs/idgen"
 )
 
 type (

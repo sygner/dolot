@@ -1,14 +1,14 @@
 module dolott_game
 
-go 1.24.0
+go 1.24.2
 
 require (
 	github.com/lib/pq v1.10.9
 	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.5
-	safir/libs/appconfigs v0.0.0-00010101000000-000000000000
-	safir/libs/appstates v0.0.0-00010101000000-000000000000
-	safir/libs/idgen v0.0.0-00010101000000-000000000000
+	neo/libs/appconfigs v0.0.0-00010101000000-000000000000
+	neo/libs/appstates v0.0.0-00010101000000-000000000000
+	neo/libs/idgen v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -20,8 +20,8 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
 )
 
-replace safir/libs/appconfigs => ../../libs/appconfigs
+replace neo/libs/appconfigs => ../../libs/appconfigs
 
-replace safir/libs/appstates => ../../libs/appstates
+replace neo/libs/appstates => ../../libs/appstates
 
-replace safir/libs/idgen => ../../libs/idgen
+replace neo/libs/idgen => ../../libs/idgen

@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"safir/libs/idgen/generator/sortable"
-	"safir/libs/idgen/generator/str"
-	"safir/libs/idgen/generator/uuid"
+	"neo/libs/idgen/generator/sortable"
+	"neo/libs/idgen/generator/str"
+	"neo/libs/idgen/generator/uuid"
 )
 
 func NextBytes(len int) ([]byte, error) {

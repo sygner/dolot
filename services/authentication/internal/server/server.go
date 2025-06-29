@@ -9,9 +9,9 @@ import (
 	"dolott_authentication/internal/services"
 	pb "dolott_authentication/proto/api"
 	"log"
+	"neo/libs/appconfigs"
+	"neo/libs/appstates"
 	"net"
-	"safir/libs/appconfigs"
-	"safir/libs/appstates"
 
 	"google.golang.org/grpc"
 )

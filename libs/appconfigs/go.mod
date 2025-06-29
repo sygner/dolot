@@ -1,3 +1,3 @@
-module safir/libs/appconfigs
+module neo/libs/appconfigs
 
-go 1.22.5
+go 1.24.2

@@ -7,9 +7,9 @@ import (
 	"dolott_game/internal/services"
 	pb "dolott_game/proto/api"
 	"log"
+	"neo/libs/appconfigs"
+	"neo/libs/appstates"
 	"net"
-	"safir/libs/appconfigs"
-	"safir/libs/appstates"
 
 	"google.golang.org/grpc"
 )
